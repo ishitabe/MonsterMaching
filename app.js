@@ -339,7 +339,9 @@ const state = {
   battleHistory: [],
   battleLocked: false,
   battleDragging: false,
+  battleDragAxis: null,
   battleStartX: 0,
+  battleStartY: 0,
   battleDx: 0,
   moveTooltipTimer: null,
   moveTooltipButton: null,
@@ -361,6 +363,7 @@ const state = {
   detailMonsterRef: null,
   requestLocked: false,
   dragging: false,
+  dragAxis: null,
   startX: 0,
   startY: 0,
   dx: 0,
@@ -410,7 +413,8 @@ function cacheElements() {
     "roster", "diveButton", "battleKind", "battleTitle",
     "battleSpeedButton", "battleSpeedValue",
     "battleDots", "rushBattleArea", "rushEnemyHpList", "rushAllyHpList",
-    "rushBattleLog", "bossBattleArea", "enemyName", "enemyHp", "enemyGauge", "enemyGaugeValue",
+    "rushBattleLog", "bossBattleArea", "manualBattleField",
+    "enemyName", "enemyHp", "enemyGauge", "enemyGaugeValue",
     "enemyMonster", "enemyStatusIcons", "allyName", "allyHp", "allyGauge", "allyGaugeValue",
     "allyStatusIcons",
     "allyMonster", "leftMoveCallout", "rightMoveCallout",
@@ -2465,10 +2469,11 @@ function startBattleRound() {
 
 function resetBossBattleVisualState() {
   state.battleDragging = false;
+  state.battleDragAxis = null;
   state.battleDx = 0;
-  els.bossBattleArea.style.transition = "none";
-  els.bossBattleArea.style.transform = "translateX(0) rotate(0)";
-  els.bossBattleArea.style.opacity = "1";
+  els.manualBattleField.style.transition = "none";
+  els.manualBattleField.style.transform = "translateX(0) rotate(0)";
+  els.manualBattleField.style.opacity = "1";
   els.allyMonster.classList.remove("ally-attack", "enemy-attack", "boss-hit");
   els.enemyMonster.classList.remove("ally-attack", "enemy-attack", "boss-hit");
   els.allyMonster.style.animation = "none";
@@ -2480,7 +2485,7 @@ function resetBossBattleVisualState() {
   window.requestAnimationFrame(() => {
     els.allyMonster.style.animation = "";
     els.enemyMonster.style.animation = "";
-    els.bossBattleArea.style.transition = "";
+    els.manualBattleField.style.transition = "";
   });
 }
 
@@ -2554,6 +2559,7 @@ function rushBattleTick() {
     : calculateDamage(attacker, target, move.multiplier, move.attribute);
   animateRushAttack(attacker, target, state.rushSide, () => {
     const affectedTargets = key === "flash" ? [...targets] : [target];
+    const knockedOutTargets = [];
     let primaryResult = result;
     affectedTargets.forEach((affectedTarget) => {
       const targetWasAlive = affectedTarget.hp > 0;
@@ -2566,8 +2572,18 @@ function rushBattleTick() {
         showEffectiveness(affectedTarget, finalResult, "rush");
       }
       if (targetWasAlive && affectedTarget.hp <= 0) {
-        appendKnockoutLog(attacker, affectedTarget);
+        knockedOutTargets.push(affectedTarget);
       }
+    });
+    appendBattleLog(
+      nonDamageMove
+        ? `${fighterLogName(attacker)}が「${move.name}」を使用`
+        : missed
+          ? `${fighterLogName(attacker)}の「${move.name}」は外れた`
+          : formatAttackLog(attacker, target, move, primaryResult)
+    );
+    knockedOutTargets.forEach((knockedOutTarget) => {
+      appendKnockoutLog(attacker, knockedOutTarget);
     });
     applyMoveEffects(
       attacker,
@@ -2578,13 +2594,6 @@ function rushBattleTick() {
     );
     finishFighterAction(attacker);
     renderRushHp();
-    appendBattleLog(
-      nonDamageMove
-        ? `${fighterLogName(attacker)}が「${move.name}」を使用`
-        : missed
-          ? `${fighterLogName(attacker)}の「${move.name}」は外れた`
-          : formatAttackLog(attacker, target, move, primaryResult)
-    );
     resolveRushBattle();
   });
   state.rushSide = state.rushSide === "ally" ? "enemy" : "ally";
@@ -3410,9 +3419,9 @@ function generateDungeonMatchRequests(count) {
 
 function settleBossSwipe(onSettled) {
   const duration = battleDuration(220, "boss");
-  els.bossBattleArea.style.transition = `transform ${duration}ms ease, opacity ${duration}ms ease`;
-  els.bossBattleArea.style.transform = "translateX(0) rotate(0)";
-  els.bossBattleArea.style.opacity = "1";
+  els.manualBattleField.style.transition = `transform ${duration}ms ease, opacity ${duration}ms ease`;
+  els.manualBattleField.style.transform = "translateX(0) rotate(0)";
+  els.manualBattleField.style.opacity = "1";
   els.leftMoveCallout.style.opacity = "0";
   els.rightMoveCallout.style.opacity = "0";
   els.leftMoveCallout.style.transform = "";
@@ -3430,21 +3439,33 @@ function onBattlePointerDown(event) {
   if (
     state.battleIndex !== rushBattleCount()
     || state.battleLocked
+    || !event.target.closest(".manual-battle-field")
     || event.target.closest("button")
     || event.target.closest(".battle-monster")
   ) return;
   state.battleDragging = true;
+  state.battleDragAxis = null;
   state.battleStartX = event.clientX;
+  state.battleStartY = event.clientY;
   state.battleDx = 0;
-  els.bossBattleArea.style.transition = "";
-  els.battleView.setPointerCapture(event.pointerId);
+  els.manualBattleField.style.transition = "";
 }
 
 function onBattlePointerMove(event) {
   if (!state.battleDragging) return;
-  state.battleDx = event.clientX - state.battleStartX;
-  const confidence = Math.min(Math.abs(state.battleDx) / 110, 1);
-  els.bossBattleArea.style.transform = `translateX(${state.battleDx}px) rotate(${state.battleDx / 40}deg)`;
+  const dx = event.clientX - state.battleStartX;
+  const dy = event.clientY - state.battleStartY;
+  if (!state.battleDragAxis && Math.max(Math.abs(dx), Math.abs(dy)) >= 8) {
+    state.battleDragAxis = Math.abs(dx) > Math.abs(dy) * 1.15 ? "x" : "y";
+    if (state.battleDragAxis === "x") {
+      els.battleView.setPointerCapture(event.pointerId);
+    }
+  }
+  if (state.battleDragAxis !== "x") return;
+  event.preventDefault();
+  state.battleDx = dx;
+  const confidence = Math.min(Math.abs(state.battleDx) / 72, 1);
+  els.manualBattleField.style.transform = `translateX(${state.battleDx}px) rotate(${state.battleDx / 48}deg)`;
   els.leftMoveCallout.style.opacity = state.battleDx < 0 ? String(confidence) : "0";
   els.rightMoveCallout.style.opacity = state.battleDx > 0 ? String(confidence) : "0";
   els.leftMoveCallout.style.transform = state.battleDx < 0
@@ -3458,20 +3479,22 @@ function onBattlePointerMove(event) {
 function onBattlePointerUp(event) {
   if (!state.battleDragging) return;
   state.battleDragging = false;
-  if (event.type === "pointercancel") {
-    els.bossBattleArea.style.transition = "transform 160ms ease";
-    els.bossBattleArea.style.transform = "translateX(0) rotate(0)";
+  const wasHorizontal = state.battleDragAxis === "x";
+  state.battleDragAxis = null;
+  if (event.type === "pointercancel" || !wasHorizontal) {
+    els.manualBattleField.style.transition = "transform 160ms ease";
+    els.manualBattleField.style.transform = "translateX(0) rotate(0)";
     els.leftMoveCallout.style.opacity = "0";
     els.rightMoveCallout.style.opacity = "0";
     els.leftMoveCallout.style.transform = "";
     els.rightMoveCallout.style.transform = "";
     return;
   }
-  if (Math.abs(state.battleDx) >= 110) {
+  if (Math.abs(state.battleDx) >= 72) {
     useMove(state.battleDx > 0 ? "right" : "left");
   } else {
-    els.bossBattleArea.style.transition = "transform 160ms ease";
-    els.bossBattleArea.style.transform = "translateX(0) rotate(0)";
+    els.manualBattleField.style.transition = "transform 160ms ease";
+    els.manualBattleField.style.transform = "translateX(0) rotate(0)";
     els.leftMoveCallout.style.opacity = "0";
     els.rightMoveCallout.style.opacity = "0";
     els.leftMoveCallout.style.transform = "";
@@ -3931,16 +3954,28 @@ function setCardPosition(dx, dy) {
 function onPointerDown(event) {
   if (state.currentView !== "matchView" || state.requestLocked || event.target.closest("button")) return;
   state.dragging = true;
+  state.dragAxis = null;
   state.startX = event.clientX;
   state.startY = event.clientY;
+  state.dx = 0;
+  state.dy = 0;
   els.card.style.transition = "";
-  els.card.setPointerCapture(event.pointerId);
 }
 
 function onPointerMove(event) {
   if (!state.dragging) return;
-  state.dx = event.clientX - state.startX;
-  state.dy = event.clientY - state.startY;
+  const dx = event.clientX - state.startX;
+  const dy = event.clientY - state.startY;
+  if (!state.dragAxis && Math.max(Math.abs(dx), Math.abs(dy)) >= 8) {
+    state.dragAxis = Math.abs(dx) > Math.abs(dy) * 1.15 ? "x" : "y";
+    if (state.dragAxis === "x") {
+      els.card.setPointerCapture(event.pointerId);
+    }
+  }
+  if (state.dragAxis !== "x") return;
+  event.preventDefault();
+  state.dx = dx;
+  state.dy = dy;
   if (state.tutorialStage === "prince") {
     state.dx = Math.max(0, state.dx);
   }
@@ -3950,17 +3985,19 @@ function onPointerMove(event) {
 function onPointerUp(event) {
   if (!state.dragging) return;
   state.dragging = false;
+  const dragAxis = state.dragAxis;
+  state.dragAxis = null;
   if (event.type === "pointercancel") {
     snapCardBack();
     return;
   }
-  if (Math.abs(state.dx) > 110) {
+  if (dragAxis === "x" && Math.abs(state.dx) > 72) {
     if (state.tutorialStage === "prince" && state.dx < 0) {
       snapCardBack();
       return;
     }
     decideRequest(state.dx > 0);
-  } else if (Math.abs(state.dx) < 8 && Math.abs(state.dy) < 8) {
+  } else if (!dragAxis && Math.abs(state.dx) < 8 && Math.abs(state.dy) < 8) {
     snapCardBack();
     openMonsterDetail();
   } else {
