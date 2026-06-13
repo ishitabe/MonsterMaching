@@ -17,7 +17,7 @@
         </button>
         <div class="resources" aria-label="所持状況">
           <span>仲間 <strong id="friends">3</strong></span>
-          <span>G <strong id="gold">320</strong></span>
+          <span>Gold <strong id="gold">320</strong></span>
         </div>
         <button class="options-button" id="optionsButton" type="button" aria-label="オプション" title="オプション">⚙</button>
       </header>
@@ -164,7 +164,7 @@
               <p class="eyebrow">SHOP</p>
               <h1>ショップ</h1>
             </div>
-            <span class="selection-count">G <strong id="shopGold">320</strong></span>
+            <span class="selection-count">Gold <strong id="shopGold">320</strong></span>
           </div>
           <p class="home-caption">マッチしたモンスターを仲間にするための道具です。</p>
           <section class="shop-item">
@@ -176,7 +176,7 @@
             </div>
             <button class="shop-buy-button" id="buyCageButton" type="button">
               <span>1個購入</span>
-              <strong>100 G</strong>
+              <strong>100 Gold</strong>
             </button>
           </section>
           <section class="shop-item">
@@ -189,7 +189,7 @@
             <div class="shop-item-actions">
               <button class="shop-buy-button" id="buyExpDrinkButton" type="button">
                 <span>1個購入</span>
-                <strong>200 G</strong>
+                <strong>200 Gold</strong>
               </button>
               <button class="shop-use-button" id="useExpDrinkButton" type="button">使う</button>
             </div>
@@ -335,6 +335,14 @@
             <div class="monster-summary">
               <div class="image-panel" id="imagePanel">
                 <div class="monster-art" id="monsterArt" aria-hidden="true"></div>
+                <div class="match-image-identity">
+                  <h2 id="name">---</h2>
+                  <div class="monster-tags">
+                    <span class="level-badge" id="levelBadge">Lv 1</span>
+                    <span class="rank-badge" id="rankBadge">ランク G</span>
+                    <span class="attribute" id="attribute">---</span>
+                  </div>
+                </div>
               </div>
               <div class="summary-stats">
                 <div class="summary-sp"><span>SP</span><strong id="sp">000</strong></div>
@@ -345,22 +353,13 @@
             </div>
 
             <div class="card-body">
-              <div class="title-row">
-                <h2 id="name">---</h2>
-                <div class="monster-tags">
-                  <span class="level-badge" id="levelBadge">Lv 1</span>
-                  <span class="rank-badge" id="rankBadge">ランク G</span>
-                  <span class="attribute" id="attribute">---</span>
-                </div>
-              </div>
-
               <div class="ability-list" id="matchAbilityList">
                 <button class="ability-chip" type="button" data-ability-kind="right"><span>右技</span><strong id="rightMove">---</strong></button>
                 <button class="ability-chip" type="button" data-ability-kind="left1"><span>左技1</span><strong id="leftMove">---</strong></button>
                 <button class="ability-chip" type="button" data-ability-kind="trait"><span>特性</span><strong id="trait">---</strong></button>
                 <button class="ability-chip" id="leftMove2Button" type="button" data-ability-kind="left2"><span>左技2</span><strong id="leftMove2">なし</strong></button>
               </div>
-              <div class="ability-info" id="matchAbilityInfo">技や特性をタップすると詳細を表示します</div>
+              <div class="ability-info match-ability-info" id="matchAbilityInfo" hidden></div>
 
               <div class="iv-block">
                 <div class="iv-heading"><strong>個体値</strong><span>0〜5</span></div>

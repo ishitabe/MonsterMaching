@@ -1239,7 +1239,7 @@ function formatSaveTimestamp(savedAt) {
 function saveSummary(saved) {
   if (!saved) return "空きスロット";
   const friendCount = Array.isArray(saved.friends) ? saved.friends.length : 0;
-  return `Lv${saved.playerLevel ?? 1} / 仲間${friendCount}体 / ${saved.gold ?? 0}G`;
+  return `Lv${saved.playerLevel ?? 1} / 仲間${friendCount}体 / ${saved.gold ?? 0} Gold`;
 }
 
 function renderDeveloperSaveSlots() {
@@ -2643,7 +2643,7 @@ function resolveRushBattle() {
     const experienceAwards = calculatePartyExperience(state.enemies);
     const battleGold = calculateBattleGold(state.enemies);
     state.gold += battleGold;
-    appendBattleLog(`${battleGold}Gを獲得した`, "reward");
+    appendBattleLog(`${battleGold} Goldを獲得した`, "reward");
     updateResources();
     const finalRushCleared = state.battleIndex + 1 === rushBattleCount();
     appendBattleLog(
@@ -3358,7 +3358,7 @@ function winBattleRound() {
   if (state.battleIndex >= totalBattleCount()) {
     appendBattleLog("ボスバトル勝利", "result");
     state.gold += battleGold;
-    appendBattleLog(`${battleGold}Gを獲得した`, "reward");
+    appendBattleLog(`${battleGold} Goldを獲得した`, "reward");
     updateResources();
     showExperienceReward(experienceAwards, "ボス撃破", () => finishDungeon(true));
   } else {

@@ -3374,23 +3374,22 @@ h2 {
   min-height: 0;
   align-items: start;
   padding: 10px 0 8px;
-  touch-action: pan-y;
+  overflow: hidden;
+  touch-action: none;
 }
 
 .monster-card {
   position: relative;
   width: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
+  height: 100%;
+  overflow: hidden;
   max-height: 100%;
   border: 1px solid #d6dfe2;
   border-radius: 8px;
   background: var(--panel);
   box-shadow: 0 14px 34px rgba(23, 33, 43, 0.14);
   transform-origin: 50% 88%;
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  touch-action: none;
   user-select: none;
   will-change: transform, opacity;
   cursor: pointer;
@@ -3422,6 +3421,48 @@ h2 {
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0)),
     var(--monster-bg, #dcefe9);
+}
+
+.match-image-identity {
+  position: absolute;
+  z-index: 2;
+  inset: 12px;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  pointer-events: none;
+}
+
+.match-image-identity h2 {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: #17212b;
+  font-size: 24px;
+  line-height: 1.08;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.match-image-identity .monster-tags {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+.match-image-identity .level-badge,
+.match-image-identity .rank-badge,
+.match-image-identity .attribute {
+  height: 27px;
+  min-width: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 0 7px;
+  font-size: 10px;
+  backdrop-filter: blur(5px);
 }
 
 .summary-stats {
@@ -3485,6 +3526,19 @@ h2 {
   filter: drop-shadow(0 16px 14px rgba(23, 33, 43, 0.18));
 }
 
+.match-view .monster-summary {
+  min-height: clamp(170px, 31svh, 224px);
+}
+
+.match-view .image-panel {
+  min-height: 0;
+}
+
+.match-view .monster-art {
+  width: clamp(126px, 23svh, 184px);
+  height: clamp(126px, 23svh, 184px);
+}
+
 .monster-art::before,
 .monster-art::after {
   position: absolute;
@@ -3516,9 +3570,9 @@ h2 {
 
 .card-body {
   display: grid;
-  gap: 9px;
+  gap: 8px;
   border-top: 1px solid #e1e7e9;
-  padding: 13px 14px 14px;
+  padding: 10px 12px 12px;
 }
 
 .title-row {
@@ -3593,9 +3647,9 @@ h2 {
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
-  min-height: 54px;
+  min-height: 46px;
   background: #f7faf9;
-  padding: 8px 10px;
+  padding: 6px 9px;
   text-align: left;
 }
 
@@ -3611,7 +3665,7 @@ h2 {
   display: block;
   margin-top: 2px;
   overflow-wrap: anywhere;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
@@ -3644,6 +3698,10 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.match-ability-info {
+  display: none !important;
+}
+
 .ability-info::first-line {
   color: var(--accent-dark);
   font-weight: 1000;
@@ -3651,7 +3709,7 @@ h2 {
 
 .iv-block {
   display: grid;
-  gap: 7px;
+  gap: 5px;
   padding-top: 1px;
 }
 
@@ -3676,7 +3734,7 @@ h2 {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) 18px;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .iv-row > strong {
@@ -4524,6 +4582,14 @@ h2 {
     min-height: 178px;
   }
 
+  .match-view .monster-summary {
+    min-height: 170px;
+  }
+
+  .match-view .image-panel {
+    min-height: 0;
+  }
+
   .monster-art {
     width: 134px;
     height: 134px;
@@ -4571,7 +4637,7 @@ h2 {
 
   .battle-head {
     align-items: flex-start;
-    padding-top: 16px;
+    padding-top: 42px;
   }
 
   .battle-head h1 {
@@ -4585,6 +4651,7 @@ h2 {
   }
 
   .test-clear-button {
+    top: calc(70px + env(safe-area-inset-top));
     left: 12px;
   }
 
@@ -4597,18 +4664,20 @@ h2 {
   .manual-battle-field {
     display: grid;
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-    padding: 6px 0 2px;
+    gap: 8px;
+    padding: 8px 0 4px;
   }
 
   .combatant {
-    width: 86%;
+    width: 100%;
     min-height: 0;
   }
 
   .enemy-combatant {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 86px;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: minmax(0, 1fr) 102px;
+    grid-template-rows: auto 20px 14px 22px;
+    column-gap: 10px;
     align-self: stretch;
     margin-left: auto;
   }
@@ -4624,12 +4693,15 @@ h2 {
     grid-row: 1 / 5;
     grid-column: 2;
     align-self: center;
+    justify-self: end;
+    transform: translateX(5px) scaleX(-1);
   }
 
   .ally-combatant {
     display: grid;
-    grid-template-columns: 92px minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
+    grid-template-columns: 102px minmax(0, 1fr);
+    grid-template-rows: auto 20px 14px 22px;
+    column-gap: 10px;
     align-self: stretch;
   }
 
@@ -4637,6 +4709,8 @@ h2 {
     grid-row: 1 / 5;
     grid-column: 1;
     align-self: center;
+    justify-self: start;
+    transform: translateX(-5px);
   }
 
   .ally-combatant .combatant-head,
@@ -4647,8 +4721,30 @@ h2 {
   }
 
   .combatant-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-self: end;
-    margin-bottom: 3px;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    margin-bottom: 4px;
+  }
+
+  .combatant-head strong {
+    overflow: visible;
+    font-size: 16px;
+    line-height: 1.15;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .combatant-head span {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 3px 5px;
+    font-size: 7px;
   }
 
   .fighter-status-icons {
@@ -4658,8 +4754,8 @@ h2 {
 
   .battle-monster,
   .ally-monster {
-    width: 86px;
-    height: 86px;
+    width: 98px;
+    height: 98px;
     margin: 0;
   }
 
@@ -4668,11 +4764,13 @@ h2 {
   }
 
   .battle-gauge-row {
+    grid-template-columns: 14px minmax(0, 1fr) 42px;
     margin-top: 3px;
   }
 
   .hp-track {
     height: 13px;
+    box-shadow: 0 0 0 1px rgba(116, 214, 189, 0.08);
   }
 
   .battle-controls {
@@ -4736,7 +4834,7 @@ h2 {
   }
 
   .battle-head {
-    padding-top: 13px;
+    padding-top: 38px;
   }
 
   .battle-head h1 {
@@ -4749,16 +4847,20 @@ h2 {
 
   .battle-monster,
   .ally-monster {
-    width: 76px;
-    height: 76px;
+    width: 84px;
+    height: 84px;
   }
 
   .enemy-combatant {
-    grid-template-columns: minmax(0, 1fr) 76px;
+    grid-template-columns: minmax(0, 1fr) 88px;
   }
 
   .ally-combatant {
-    grid-template-columns: 82px minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+
+  .combatant-head strong {
+    font-size: 14px;
   }
 
   .boss-log-panel {
