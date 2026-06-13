@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>モンマチ（仮）</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <button class="tutorial-skip-button" id="tutorialSkipButton" type="button">TEST: チュートリアルスキップ</button>
+      <button class="developer-save-button" id="developerSaveButton" type="button">TEST: SAVE</button>
+      <header class="topbar">
+        <button class="brand player-brand" id="homeButton" type="button">
+          <strong id="headerPlayerName">プレイヤー</strong>
+          <span>PLAYER Lv <b id="headerPlayerLevel">1</b></span>
+        </button>
+        <div class="resources" aria-label="所持状況">
+          <span>仲間 <strong id="friends">3</strong></span>
+          <span>G <strong id="gold">320</strong></span>
+        </div>
+        <button class="options-button" id="optionsButton" type="button" aria-label="オプション" title="オプション">⚙</button>
+      </header>
+
+      <section class="view active" id="partyView">
+        <div class="home-panel monster-home-panel" id="monsterHomePanel">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">MONSTERS</p>
+              <h1>仲間モンスター</h1>
+            </div>
+            <div class="monster-heading-actions">
+              <span class="selection-count" id="collectionCount">0体</span>
+              <button class="party-edit-button" id="openPartyEditorButton" type="button">パーティー編成</button>
+            </div>
+          </div>
+          <p class="home-caption">モンスターをタップすると詳細を確認できます。</p>
+          <div class="collection-controls">
+            <label>
+              <span>並び替え</span>
+              <select id="collectionSort">
+                <option value="newest">新しい順</option>
+                <option value="level">レベルが高い順</option>
+                <option value="sp">SPが高い順</option>
+                <option value="hp">HPが高い順</option>
+                <option value="power">パワーが高い順</option>
+                <option value="star">スターが高い順</option>
+                <option value="ivHp">個体値HPが高い順</option>
+                <option value="ivPower">個体値パワーが高い順</option>
+                <option value="ivStar">個体値スターが高い順</option>
+                <option value="ivTotal">個体値合計が高い順</option>
+              </select>
+            </label>
+            <label>
+              <span>属性</span>
+              <select id="collectionAttributeFilter">
+                <option value="all">すべて</option>
+                <option value="赤">赤</option>
+                <option value="緑">緑</option>
+                <option value="青">青</option>
+                <option value="白">白</option>
+                <option value="黒">黒</option>
+                <option value="無">無</option>
+              </select>
+            </label>
+          </div>
+          <div class="collection-grid" id="collectionGrid"></div>
+        </div>
+
+        <div class="home-panel dungeon-home-panel" id="dungeonHomePanel" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">DUNGEON</p>
+              <h1>ダンジョン</h1>
+            </div>
+            <span class="selection-count">探索先を選択</span>
+          </div>
+          <p class="home-caption">挑戦するダンジョンを選んでください。</p>
+          <div class="dungeon-list" id="generalDungeonList"></div>
+          <div class="dungeon-list" id="trialDungeonList" hidden></div>
+          <div class="dungeon-category-tabs" id="dungeonCategoryTabs">
+            <button class="active" type="button" data-dungeon-category="general">通常ダンジョン</button>
+            <button type="button" data-dungeon-category="trial">試練</button>
+          </div>
+        </div>
+
+        <div class="home-panel match-home-panel" id="matchHomePanel" hidden>
+          <div class="section-heading" id="matchMenuHeading">
+            <div>
+              <p class="eyebrow">MATCH</p>
+              <h1>マッチ</h1>
+            </div>
+            <span class="selection-count">PLAYER Lv <strong id="playerLevel">1</strong></span>
+          </div>
+          <p class="home-caption" id="matchMenuCaption">届いた申請を確認したり、気になるモンスターを探したりできます。</p>
+          <div class="match-menu-list" id="matchMenuList">
+            <button class="match-menu-card profile-menu-card" id="openProfileButton" type="button">
+              <span class="profile-menu-icon">P</span>
+              <span class="inbox-copy">
+                <strong id="matchProfileName">プレイヤー</strong>
+                <small>名前とプロフィールモンスターを変更</small>
+              </span>
+              <span class="outgoing-count-label">編集</span>
+            </button>
+            <button class="request-inbox match-menu-card" id="requestInbox" type="button" disabled>
+              <span class="inbox-icon">!</span>
+              <span class="inbox-copy">
+                <strong id="requestInboxTitle">届いたマッチ申請</strong>
+                <small id="requestInboxCopy">現在、新しい申請はありません</small>
+              </span>
+              <span class="inbox-count" id="inboxCount">0</span>
+            </button>
+            <button class="match-menu-card outgoing-match-card" id="outgoingMatchButton" type="button">
+              <span class="outgoing-match-icon">↗</span>
+              <span class="inbox-copy">
+                <strong>モンスターを探す</strong>
+                <small id="outgoingUnlockCopy">プレイヤーLv3で解放</small>
+              </span>
+              <span class="outgoing-count-label" id="outgoingCountLabel">Lv3</span>
+            </button>
+          </div>
+          <section class="outgoing-match-view" id="outgoingMatchView" hidden>
+            <div class="outgoing-match-head">
+              <button class="icon-back-button" id="closeOutgoingMatch" type="button" aria-label="マッチメニューへ戻る">‹</button>
+              <div>
+                <p class="eyebrow">FIND MONSTERS</p>
+                <h2>一覧マッチ</h2>
+              </div>
+              <button class="refresh-match-button" id="refreshOutgoingMatch" type="button">
+                <span>更新</span>
+                <small id="outgoingRefreshTimer">6:00:00</small>
+              </button>
+            </div>
+            <div class="match-profile-summary">
+              <div>
+                <small id="outgoingPlayerName">プレイヤー</small>
+                <strong id="unlockedRankLabel">ランクGまで</strong>
+              </div>
+              <div class="match-profile-monsters" id="matchProfileMonsters"></div>
+            </div>
+            <p class="outgoing-match-feedback" id="outgoingMatchFeedback" hidden aria-live="polite"></p>
+            <div class="outgoing-monster-list" id="outgoingMonsterList"></div>
+          </section>
+        </div>
+
+        <div class="home-panel training-home-panel" id="trainingHomePanel" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">TRAINING</p>
+              <h1>特訓</h1>
+            </div>
+            <span class="selection-count">PLAYER Lv 6</span>
+          </div>
+          <div class="training-placeholder">
+            <span class="training-symbol">＋</span>
+            <strong>特訓機能は準備中</strong>
+            <p>2体のモンスターから新しいモンスターを育てる機能を今後追加します。</p>
+          </div>
+        </div>
+
+        <div class="home-panel shop-home-panel" id="shopHomePanel" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SHOP</p>
+              <h1>ショップ</h1>
+            </div>
+            <span class="selection-count">G <strong id="shopGold">320</strong></span>
+          </div>
+          <p class="home-caption">マッチしたモンスターを仲間にするための道具です。</p>
+          <section class="shop-item">
+            <div class="cage-icon" aria-hidden="true"><i></i></div>
+            <div class="shop-item-copy">
+              <strong>モンスターケージ</strong>
+              <span>所持数 <b id="shopCageCount">3</b></span>
+              <small>仲間にするとき1個消費</small>
+            </div>
+            <button class="shop-buy-button" id="buyCageButton" type="button">
+              <span>1個購入</span>
+              <strong>100 G</strong>
+            </button>
+          </section>
+          <section class="shop-item">
+            <div class="exp-drink-icon" aria-hidden="true"><i>EXP</i></div>
+            <div class="shop-item-copy">
+              <strong>経験値500ドリンク</strong>
+              <span>所持数 <b id="shopExpDrinkCount">0</b></span>
+              <small>好きな仲間1体に500経験値</small>
+            </div>
+            <div class="shop-item-actions">
+              <button class="shop-buy-button" id="buyExpDrinkButton" type="button">
+                <span>1個購入</span>
+                <strong>200 G</strong>
+              </button>
+              <button class="shop-use-button" id="useExpDrinkButton" type="button">使う</button>
+            </div>
+          </section>
+          <p class="shop-feedback" id="shopFeedback" aria-live="polite"></p>
+        </div>
+
+        <nav class="home-tabs" aria-label="ホームメニュー">
+          <button class="home-tab active" id="monsterTabButton" type="button" data-home-tab="monsters">
+            <span class="tab-symbol">●</span>
+            <span>モンスター</span>
+          </button>
+          <button class="home-tab" id="dungeonTabButton" type="button" data-home-tab="dungeon">
+            <span class="tab-symbol">▲</span>
+            <span>ダンジョン</span>
+          </button>
+          <button class="home-tab locked" id="trainingTabButton" type="button" data-home-tab="training">
+            <span class="tab-symbol">＋</span>
+            <span>特訓</span>
+            <i class="tab-lock-label">Lv6</i>
+          </button>
+          <button class="home-tab" id="matchTabButton" type="button" data-home-tab="match">
+            <span class="tab-symbol">♥</span>
+            <span>マッチ</span>
+            <i class="tab-badge" id="requestTabBadge" hidden>0</i>
+          </button>
+          <button class="home-tab" id="shopTabButton" type="button" data-home-tab="shop">
+            <span class="tab-symbol">◆</span>
+            <span>ショップ</span>
+          </button>
+        </nav>
+      </section>
+
+      <section class="view battle-view" id="battleView">
+        <button class="test-clear-button" id="testClearButton" type="button">TEST: ラッシュ突破</button>
+        <div class="battle-head">
+          <div>
+            <p class="eyebrow" id="battleKind">ENCOUNTER</p>
+            <h1 id="battleTitle">地下水路 1 / 6</h1>
+          </div>
+          <div class="battle-head-tools">
+            <button class="battle-speed-button" id="battleSpeedButton" type="button">
+              <span>SPEED</span><strong id="battleSpeedValue">×3</strong>
+            </button>
+            <button class="battle-status-button" id="openBattleStatus" type="button">
+              <span>◎</span>戦況
+            </button>
+            <div class="battle-dots" id="battleDots" aria-label="戦闘進行"></div>
+          </div>
+        </div>
+
+        <div class="rush-battle-area" id="rushBattleArea">
+          <section class="rush-side ally-rush-side">
+            <p>YOUR PARTY</p>
+            <div class="rush-hp-list" id="rushAllyHpList"></div>
+          </section>
+          <div class="rush-mark">VS</div>
+          <section class="rush-side enemy-rush-side">
+            <p>ENEMY RUSH</p>
+            <div class="rush-hp-list" id="rushEnemyHpList"></div>
+          </section>
+          <div class="battle-log-panel rush-log-panel">
+            <div class="battle-log-title"><strong>BATTLE LOG</strong><span>スクロールして遡れます</span></div>
+            <div class="battle-log-list" id="rushBattleLog" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="boss-battle-area" id="bossBattleArea" hidden>
+          <div class="manual-battle-field">
+            <section class="combatant enemy-combatant">
+              <div class="combatant-head">
+                <strong id="enemyName">---</strong>
+                <span>BOSS</span>
+              </div>
+              <div class="fighter-status-icons" id="enemyStatusIcons"></div>
+              <div class="hp-track"><i class="hp-fill" id="enemyHp"></i></div>
+              <div class="battle-gauge-row">
+                <span>G</span>
+                <div class="battle-gauge-track"><i id="enemyGauge"></i></div>
+                <strong id="enemyGaugeValue">0 / 10</strong>
+              </div>
+              <div class="battle-monster enemy-monster" id="enemyMonster" role="button" tabindex="0" aria-label="相手モンスターの詳細"></div>
+            </section>
+
+            <div class="battle-effect-text" id="bossEffectText" hidden></div>
+
+            <section class="combatant ally-combatant">
+              <div class="move-callout move-callout-left" id="leftMoveCallout">左技1</div>
+              <div class="move-callout move-callout-right" id="rightMoveCallout">右技</div>
+              <div class="battle-monster ally-monster" id="allyMonster" role="button" tabindex="0" aria-label="味方モンスターの詳細"></div>
+              <div class="combatant-head">
+                <strong id="allyName">---</strong>
+                <span>YOUR MONSTER</span>
+              </div>
+              <div class="fighter-status-icons" id="allyStatusIcons"></div>
+              <div class="hp-track"><i class="hp-fill" id="allyHp"></i></div>
+              <div class="battle-gauge-row">
+                <span>G</span>
+                <div class="battle-gauge-track"><i id="allyGauge"></i></div>
+                <strong id="allyGaugeValue">0 / 10</strong>
+              </div>
+            </section>
+          </div>
+
+          <div class="battle-controls">
+            <div class="move-guide">
+              <button class="battle-move-button left" id="leftMoveButton" type="button">
+                <span>←</span><strong id="leftMoveGuide">左技1</strong>
+                <span class="battle-move-tooltip" id="leftMoveTooltip" role="tooltip"></span>
+              </button>
+              <button class="battle-move-button right" id="rightMoveButton" type="button">
+                <strong id="rightMoveGuide">右技</strong><span>→</span>
+                <span class="battle-move-tooltip" id="rightMoveTooltip" role="tooltip"></span>
+              </button>
+            </div>
+            <div class="bench" id="bench" aria-label="控えモンスター"></div>
+          </div>
+          <div class="battle-log-panel boss-log-panel">
+            <div class="battle-log-title"><strong>BATTLE LOG</strong><span>スクロールして遡れます</span></div>
+            <div class="battle-log-list" id="battleLog" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view match-view" id="matchView">
+        <div class="match-head">
+          <div>
+            <p class="eyebrow">NEW REQUESTS</p>
+            <h1>ダンジョンで出会った</h1>
+          </div>
+          <div class="match-head-actions">
+            <span id="requestProgress">1 / 5</span>
+            <button class="reject-all-button" id="rejectAllRequestsButton" type="button">すべて拒否</button>
+            <button class="exit-request-button" id="exitRequestsButton" type="button" aria-label="申請画面を閉じる">×</button>
+          </div>
+        </div>
+
+        <div class="deck">
+          <div class="decision-badge badge-left" id="skipBadge">スルー</div>
+          <div class="decision-badge badge-right" id="friendBadge">仲間</div>
+
+          <article class="monster-card" id="card">
+            <div class="monster-summary">
+              <div class="image-panel" id="imagePanel">
+                <div class="monster-art" id="monsterArt" aria-hidden="true"></div>
+              </div>
+              <div class="summary-stats">
+                <div class="summary-sp"><span>SP</span><strong id="sp">000</strong></div>
+                <div><span>HP</span><strong id="matchHp">0</strong></div>
+                <div><span>パワー</span><strong id="matchPower">0</strong></div>
+                <div><span>スター</span><strong id="matchStar">0</strong></div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="title-row">
+                <h2 id="name">---</h2>
+                <div class="monster-tags">
+                  <span class="level-badge" id="levelBadge">Lv 1</span>
+                  <span class="rank-badge" id="rankBadge">ランク G</span>
+                  <span class="attribute" id="attribute">---</span>
+                </div>
+              </div>
+
+              <div class="ability-list" id="matchAbilityList">
+                <button class="ability-chip" type="button" data-ability-kind="right"><span>右技</span><strong id="rightMove">---</strong></button>
+                <button class="ability-chip" type="button" data-ability-kind="left1"><span>左技1</span><strong id="leftMove">---</strong></button>
+                <button class="ability-chip" type="button" data-ability-kind="trait"><span>特性</span><strong id="trait">---</strong></button>
+                <button class="ability-chip" id="leftMove2Button" type="button" data-ability-kind="left2"><span>左技2</span><strong id="leftMove2">なし</strong></button>
+              </div>
+              <div class="ability-info" id="matchAbilityInfo">技や特性をタップすると詳細を表示します</div>
+
+              <div class="iv-block">
+                <div class="iv-heading"><strong>個体値</strong><span>0〜5</span></div>
+                <div class="iv-row"><span>HP</span><div class="gauge"><i id="ivHp"></i></div><strong id="ivHpValue">0</strong></div>
+                <div class="iv-row"><span>パワー</span><div class="gauge"><i id="ivAtk"></i></div><strong id="ivAtkValue">0</strong></div>
+                <div class="iv-row"><span>スター</span><div class="gauge"><i id="ivSense"></i></div><strong id="ivSenseValue">0</strong></div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="match-actions">
+          <button class="round-button skip" id="skipButton" type="button" aria-label="スルー">×</button>
+          <button class="round-button keep" id="keepButton" type="button" aria-label="仲間にする">✓</button>
+        </div>
+        <div class="match-cage-status" id="matchCageStatus" aria-live="polite">
+          <span id="matchCageLabel">ケージ</span> <strong id="matchCageCount">3</strong>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="party-dialog" id="partyDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">PARTY SELECT</p>
+          <h2 id="selectedDungeonName">ワラワラの森</h2>
+        </div>
+        <button class="close-button" id="closePartyDialog" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="preset-tabs" id="presetTabs">
+        <button class="preset-tab active" type="button" data-preset-index="0">PARTY 1</button>
+        <button class="preset-tab" type="button" data-preset-index="1">PARTY 2</button>
+        <button class="preset-tab" type="button" data-preset-index="2">PARTY 3</button>
+      </div>
+      <p class="dialog-copy">スロットをタップして出撃するモンスターを選択します。</p>
+      <div class="party-slots editor-slots" id="partySlots" aria-label="選択中のパーティ"></div>
+      <div class="party-total">
+        <span>パーティSP</span>
+        <strong id="partyTotalSp">0</strong>
+      </div>
+      <button class="primary-button dive-dialog-button" id="diveButton" type="button" disabled>このパーティで潜る</button>
+      <span class="selection-count dialog-party-count" id="partyCount">0 / 3</span>
+    </dialog>
+
+    <dialog class="party-picker-dialog" id="partyPickerDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">SELECT MONSTER</p>
+          <h2 id="pickerTitle">スロット1を選択</h2>
+        </div>
+        <button class="close-button" id="closePartyPicker" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="collection-controls picker-controls">
+        <label>
+          <span>並び替え</span>
+          <select id="partyPickerSort">
+            <option value="newest">新しい順</option>
+            <option value="level">レベルが高い順</option>
+            <option value="sp">SPが高い順</option>
+            <option value="hp">HPが高い順</option>
+            <option value="power">パワーが高い順</option>
+            <option value="star">スターが高い順</option>
+            <option value="ivHp">個体値HPが高い順</option>
+            <option value="ivPower">個体値パワーが高い順</option>
+            <option value="ivStar">個体値スターが高い順</option>
+            <option value="ivTotal">個体値合計が高い順</option>
+          </select>
+        </label>
+        <label>
+          <span>属性</span>
+          <select id="partyPickerAttributeFilter">
+            <option value="all">すべて</option>
+            <option value="赤">赤</option>
+            <option value="緑">緑</option>
+            <option value="青">青</option>
+            <option value="白">白</option>
+            <option value="黒">黒</option>
+            <option value="無">無</option>
+          </select>
+        </label>
+      </div>
+      <div class="roster picker-roster" id="roster"></div>
+    </dialog>
+
+    <dialog class="party-picker-dialog" id="expDrinkDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">USE ITEM</p>
+          <h2>経験値を与える仲間</h2>
+        </div>
+        <button class="close-button" id="closeExpDrinkDialog" type="button" aria-label="閉じる">×</button>
+      </div>
+      <p class="dialog-copy">選んだモンスターに500経験値を与えます。</p>
+      <div class="roster picker-roster" id="expDrinkRoster"></div>
+    </dialog>
+
+    <dialog class="profile-dialog" id="profileDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">PLAYER PROFILE</p>
+          <h2>プロフィール変更</h2>
+        </div>
+        <button class="close-button" id="closeProfileDialog" type="button" aria-label="閉じる">×</button>
+      </div>
+      <label class="profile-name-field">
+        <span>プレイヤー名</span>
+        <input id="playerNameInput" type="text" maxlength="12" autocomplete="off" />
+      </label>
+      <div class="profile-editor-heading">
+        <strong>プロフィールモンスター</strong>
+        <span>3体選択</span>
+      </div>
+      <div class="profile-editor-slots" id="profileEditorSlots"></div>
+      <button class="primary-button" id="saveProfileButton" type="button">変更を保存</button>
+    </dialog>
+
+    <dialog class="party-picker-dialog" id="profilePickerDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">SELECT PROFILE MONSTER</p>
+          <h2 id="profilePickerTitle">プロフィール1を選択</h2>
+        </div>
+        <button class="close-button" id="closeProfilePicker" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="roster picker-roster" id="profilePickerRoster"></div>
+    </dialog>
+
+    <dialog class="cage-select-dialog" id="cageSelectDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">SELECT CAGE</p>
+          <h2>ケージを選ぶ</h2>
+        </div>
+        <button class="close-button" id="closeCageSelect" type="button" aria-label="閉じる">×</button>
+      </div>
+      <p class="dialog-copy">マッチ申請にはケージを1個使用します。</p>
+      <button class="cage-choice" id="standardCageChoice" type="button">
+        <span class="cage-icon" aria-hidden="true"><i></i></span>
+        <span><strong>モンスターケージ</strong><small>成功率補正 ×1.0</small></span>
+        <b>所持 <i id="outgoingCageCount">0</i></b>
+      </button>
+      <button class="primary-button" id="confirmOutgoingApplication" type="button">このケージで申請</button>
+    </dialog>
+
+    <dialog class="replace-dialog" id="replaceDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">MONSTER LIMIT</p>
+          <h2>誰と入れ替える？</h2>
+        </div>
+        <button class="close-button" id="cancelReplace" type="button" aria-label="閉じる">×</button>
+      </div>
+      <p class="dialog-copy">新しい仲間を迎えるため、今いる仲間を1体選んでください。</p>
+      <div class="replace-list" id="replaceList"></div>
+    </dialog>
+
+    <dialog class="confirm-dialog" id="rejectAllDialog">
+      <p class="eyebrow">REJECT ALL</p>
+      <h2>残りの申請をすべて拒否しますか？</h2>
+      <p class="dialog-copy">まだ確認していないモンスターも含めて、今回の申請を終了します。</p>
+      <div class="confirm-actions">
+        <button class="secondary-button" id="cancelRejectAll" type="button">キャンセル</button>
+        <button class="danger-button" id="confirmRejectAll" type="button">すべて拒否</button>
+      </div>
+    </dialog>
+
+    <dialog class="detail-dialog" id="detailDialog">
+      <div class="detail-summary">
+        <div class="detail-visual" id="detailVisual">
+          <div class="monster-art detail-monster" aria-hidden="true"></div>
+        </div>
+        <div class="summary-stats detail-summary-stats">
+          <div class="summary-sp"><span>SP</span><strong id="detailSp">---</strong></div>
+          <div><span>HP</span><strong id="detailHp">---</strong></div>
+          <div><span>パワー</span><strong id="detailPower">---</strong></div>
+          <div><span>スター</span><strong id="detailStar">---</strong></div>
+        </div>
+      </div>
+      <div class="detail-title">
+        <div>
+          <p class="eyebrow">MONSTER PROFILE</p>
+          <h2 id="detailName">---</h2>
+        </div>
+        <div class="monster-tags">
+          <span class="level-badge" id="detailLevel">Lv 1</span>
+          <span class="rank-badge" id="detailRank">ランク G</span>
+          <span class="attribute" id="detailAttribute">---</span>
+        </div>
+      </div>
+      <div class="detail-stats">
+        <div><span>才能</span><strong id="detailTalent">0</strong></div>
+        <div><span>経験値</span><strong id="detailExp">0 / 18</strong></div>
+      </div>
+      <div class="ability-list detail-ability-list" id="detailAbilityList">
+        <button class="ability-chip" type="button" data-ability-kind="right"><span>右技</span><strong id="detailRightMove">---</strong></button>
+        <button class="ability-chip" type="button" data-ability-kind="left1"><span>左技1</span><strong id="detailLeftMove">---</strong></button>
+        <button class="ability-chip" type="button" data-ability-kind="trait"><span>特性</span><strong id="detailTrait">---</strong></button>
+        <button class="ability-chip" id="detailLeftMove2Button" type="button" data-ability-kind="left2"><span>左技2</span><strong id="detailLeftMove2">なし</strong></button>
+      </div>
+      <div class="ability-info detail-ability-info" id="detailAbilityInfo">技や特性をタップすると詳細を表示します</div>
+      <div class="iv-block detail-ivs">
+        <div class="iv-heading"><strong>個体値</strong><span>0〜5</span></div>
+        <div class="iv-row"><span>HP</span><div class="gauge"><i id="detailIvHp"></i></div><strong id="detailIvHpValue">0</strong></div>
+        <div class="iv-row"><span>パワー</span><div class="gauge"><i id="detailIvAtk"></i></div><strong id="detailIvAtkValue">0</strong></div>
+        <div class="iv-row"><span>スター</span><div class="gauge"><i id="detailIvSense"></i></div><strong id="detailIvSenseValue">0</strong></div>
+      </div>
+      <div class="detail-select-actions" id="detailSelectActions" hidden>
+        <button class="primary-button" id="confirmPartyMonster" type="button">このモンスターに決定</button>
+      </div>
+    </dialog>
+
+    <div class="match-overlay" id="matchOverlay" hidden>
+      <div class="match-burst" aria-hidden="true"></div>
+      <div class="match-monster-frame">
+        <div class="mini-monster match-monster" id="matchMonster"></div>
+      </div>
+      <p>YOU MATCHED</p>
+      <h2>マッチ！</h2>
+      <strong id="matchedName">---</strong>
+    </div>
+
+    <div class="tutorial-overlay" id="tutorialOverlay" hidden>
+      <div class="tutorial-message">
+        <p class="eyebrow">TUTORIAL</p>
+        <div id="tutorialText"></div>
+        <button class="primary-button" id="tutorialContinueButton" type="button">次へ</button>
+      </div>
+    </div>
+
+    <div class="experience-overlay" id="experienceOverlay" hidden>
+      <div class="experience-panel">
+        <p class="eyebrow">BATTLE REWARD</p>
+        <h2 id="experienceTitle">経験値獲得</h2>
+        <strong class="experience-amount" id="experienceAmount">+15 EXP</strong>
+        <div class="experience-list" id="experienceList"></div>
+        <button class="primary-button" id="experienceContinueButton" type="button">次へ</button>
+      </div>
+    </div>
+
+    <div class="result-overlay" id="resultOverlay" hidden>
+      <div class="result-mark" id="resultMark">CLEAR</div>
+      <h2 id="resultTitle">ダンジョンクリア</h2>
+      <p id="resultCopy">モンスターから申請が届いています。</p>
+      <div class="result-actions">
+        <button class="primary-button" id="resultHomeButton" type="button">ホームへ戻る</button>
+        <button class="secondary-button" id="resultLogButton" type="button">全バトルログ</button>
+      </div>
+    </div>
+
+    <dialog class="battle-history-dialog" id="battleHistoryDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">DUNGEON RECORD</p>
+          <h2>今回のバトルログ</h2>
+        </div>
+        <button class="close-button" id="closeBattleHistory" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="battle-history-list" id="battleHistoryList"></div>
+    </dialog>
+
+    <dialog class="battle-status-dialog" id="battleStatusDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">BATTLE STATUS</p>
+          <h2>戦況</h2>
+        </div>
+        <button class="close-button" id="closeBattleStatus" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="battle-status-content" id="battleStatusContent"></div>
+    </dialog>
+
+    <dialog class="bench-action-dialog" id="benchActionDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">BENCH MONSTER</p>
+          <h2 id="benchActionName">控えモンスター</h2>
+        </div>
+        <button class="close-button" id="closeBenchAction" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="bench-action-monster" id="benchActionMonster"></div>
+      <div class="bench-action-buttons">
+        <button class="secondary-button" id="benchDetailButton" type="button">詳細を見る</button>
+        <button class="primary-button" id="benchSwitchButton" type="button">交代する</button>
+      </div>
+    </dialog>
+
+    <dialog class="developer-save-dialog" id="developerSaveDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">DEVELOPER SAVE</p>
+          <h2>セーブデータ管理</h2>
+        </div>
+        <button class="close-button" id="closeDeveloperSave" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="autosave-summary">
+        <span>自動保存</span>
+        <strong id="autosaveStatus">未保存</strong>
+      </div>
+      <div class="developer-save-slots" id="developerSaveSlots"></div>
+      <button class="developer-new-game" id="developerNewGame" type="button">セーブを消して最初から</button>
+    </dialog>
+
+    <dialog class="options-dialog" id="optionsDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">OPTIONS</p>
+          <h2>オプション</h2>
+        </div>
+        <button class="close-button" id="closeOptions" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="option-list">
+        <label class="option-row">
+          <span><strong>ラッシュバトル速度</strong><small>自動戦闘の進行速度</small></span>
+          <select id="rushSpeedSelect">
+            <option value="1">1倍</option>
+            <option value="2">2倍</option>
+            <option value="3">3倍</option>
+            <option value="5">5倍</option>
+            <option value="7">7倍</option>
+          </select>
+        </label>
+        <label class="option-row">
+          <span><strong>ボスバトル速度</strong><small>演出と相手ターンの速度</small></span>
+          <select id="bossSpeedSelect">
+            <option value="1">1倍</option>
+            <option value="2">2倍</option>
+            <option value="3">3倍</option>
+            <option value="5">5倍</option>
+            <option value="7">7倍</option>
+          </select>
+        </label>
+      </div>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
