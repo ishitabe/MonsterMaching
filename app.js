@@ -18,12 +18,23 @@ const moves = {
   cling: { name: "溶ける", attribute: "青", gauge: 3, multiplier: 1, effect: "5ターンの間、被ダメージを1/2にする" },
   bite: { name: "ダーク", attribute: "黒", gauge: 2, multiplier: 1.4, effect: "1.4倍ダメージ＋相手のゲージを1増やす" },
   flash: { name: "ライト", attribute: "白", gauge: 2, multiplier: 1.1, effect: "1.1倍ダメージ＋ラッシュ時に全体攻撃" }
+  ,
+  poisonFang: { name: "毒の牙", attribute: "黒", gauge: 3, multiplier: 1.3, effect: "1.3倍ダメージ＋50%で毒" },
+  fireHammer: { name: "火炎ハンマー", attribute: "赤", gauge: 4, multiplier: 1.5, effect: "1.5倍ダメージ＋自分のスターを1段階上げる" },
+  glitterMachine: { name: "キラキラさせ機", attribute: "無", gauge: 3, multiplier: 1, effect: "10ターン、味方パーティー全体のスターを2倍にする" },
+  electricShock: { name: "電気ショック", attribute: "白", gauge: 2, multiplier: 1.2, effect: "1.2倍ダメージ＋20%で麻痺" },
+  lick: { name: "舐める", attribute: "黒", gauge: 3, multiplier: 1.3, effect: "1.3倍ダメージ＋50%で盲目" },
+  ambush: { name: "闇討ち", attribute: "黒", gauge: 3, multiplier: 1.2, effect: "1.2倍ダメージ＋相手のGを1減らす" },
+  charge: { name: "ためる", attribute: "無", gauge: 3, multiplier: 1, effect: "次のターンの攻撃威力を3倍にする" },
+  healingWater: { name: "癒しの水", attribute: "青", gauge: 3, multiplier: 1, effect: "味方全員の状態異常を解除し、HPを1/4回復" },
+  poisonBreath: { name: "毒の息", attribute: "黒", gauge: 4, multiplier: 1.3, effect: "1.3倍ダメージ＋50%で毒＋全体攻撃" },
+  slimePress: { name: "スライムプレス", attribute: "青", gauge: 3, multiplier: 1.2, effect: "1.2倍ダメージ＋相手の被ダメージ率を1段階上げる" }
 };
 const monsterSpecies = [
   { no: 1, name: "プリンスライム", rank: "G", attribute: "無", hp: 35, power: 10, star: 10, expTable: "A", passive: null, leftMove: moves.caramelStrike },
-  { no: 2, name: "ワラボン", rank: "G", attribute: "緑", hp: 25, power: 7, star: 15, expTable: "A", passive: { name: "名称未設定", effect: "回避率10%" }, leftMove: moves.roll },
+  { no: 2, name: "ワラボン", rank: "G", attribute: "緑", hp: 25, power: 7, star: 15, expTable: "A", passive: { name: "隠れる", effect: "回避率10%" }, leftMove: moves.roll },
   { no: 3, name: "アカシャマ", rank: "G", attribute: "赤", hp: 27, power: 13, star: 10, expTable: "A", passive: { name: "焼きたがり", effect: "相手が火傷ならダメージ倍増" }, leftMove: moves.burn },
-  { no: 4, name: "シズク", rank: "G", attribute: "青", hp: 31, power: 10, star: 3, expTable: "A", passive: { name: "名称未設定", effect: "バトルで最初に受けるダメージを1/2にする" }, leftMove: moves.soak },
+  { no: 4, name: "シズク", rank: "G", attribute: "青", hp: 31, power: 10, star: 4, expTable: "A", passive: { name: "泡", effect: "バトルで最初に受けるダメージを1/2にする" }, leftMove: moves.soak },
   { no: 5, name: "クロダンゴ", rank: "G", attribute: "黒", hp: 32, power: 10, star: 10, expTable: "A", passive: { name: "甘々", effect: "戦闘開始時、相手のパワーを1段階下げる" }, leftMove: moves.gnaw },
   { no: 6, name: "ミルフィ", rank: "G", attribute: "白", hp: 27, power: 6, star: 18, expTable: "A", passive: { name: "甘々", effect: "場に出た時、相手のパワーを1段階下げる" }, leftMove: moves.shine },
   { no: 7, name: "ボヤモト", rank: "G", attribute: "赤", hp: 24, power: 12, star: 12, expTable: "A", passive: { name: "ヤニ", effect: "ゲージを消費する度、HPを1/8回復" }, leftMove: moves.drain },
@@ -31,9 +42,17 @@ const monsterSpecies = [
   { no: 9, name: "スライム", rank: "G", attribute: "青", hp: 35, power: 5, star: 10, expTable: "A", passive: { name: "ぷるぷる", effect: "30%の確率で相手からのダメージを1/4にする" }, leftMove: moves.cling },
   { no: 10, name: "スカルビット", rank: "G", attribute: "黒", hp: 30, power: 11, star: 9, expTable: "A", passive: { name: "怨念", effect: "倒された時、相手のゲージを0にする" }, leftMove: moves.bite },
   { no: 11, name: "デンキュ", rank: "G", attribute: "白", hp: 26, power: 8, star: 20, expTable: "A", passive: { name: "発光", effect: "回避率10%" }, leftMove: moves.flash },
-  { no: 12, name: "ゾンビキッズ", rank: "G", attribute: "黒", hp: 36, power: 12, star: 8, expTable: "A", passive: { name: "根気", effect: "HPが0になる時、一度HP1で耐える" }, leftMove: moves.bite },
-  { no: 13, name: "ナメナメラ", rank: "G", attribute: "青", hp: 42, power: 8, star: 12, expTable: "A", passive: { name: "ぷるぷる", effect: "30%の確率で相手からのダメージを1/4にする" }, leftMove: moves.cling },
-  { no: 14, name: "シャド", rank: "G", attribute: "黒", hp: 45, power: 15, star: 20, expTable: "A", passive: { name: "怨念", effect: "倒された時、相手のゲージを0にする" }, leftMove: moves.gnaw }
+  { no: 12, name: "ゾンビキッズ", rank: "G", attribute: "黒", hp: 47, power: 15, star: 6, expTable: "A", passive: { name: "ゾンビ", effect: "自分を攻撃した相手の特性をゾンビにする" }, leftMove: moves.poisonFang },
+  { no: 13, name: "グラッパ", rank: "G", attribute: "赤", hp: 38, power: 20, star: 12, expTable: "A", passive: { name: "調子乗り", effect: "クリティカルのダメージを2倍にする" }, leftMove: moves.fireHammer },
+  { no: 14, name: "天才スライム", rank: "G", attribute: "無", hp: 45, power: 12, star: 20, expTable: "A", passive: { name: "ぷるぷる", effect: "30%の確率で相手からのダメージを1/4にする" }, leftMove: moves.glitterMachine },
+  { no: 15, name: "ピリビート", rank: "G", attribute: "白", hp: 32, power: 14, star: 17, expTable: "A", passive: { name: "加速", effect: "相手を攻撃する度にゲージを1増やす" }, leftMove: moves.electricShock },
+  { no: 16, name: "ナメナメラ", rank: "G", attribute: "黒", hp: 53, power: 13, star: 3, expTable: "A", passive: { name: "ぬめぬめ", effect: "戦闘開始時、相手のスターを1段階下げる" }, leftMove: moves.lick },
+  { no: 17, name: "シャド", rank: "F", attribute: "黒", hp: 55, power: 32, star: 13, expTable: "A", passive: { name: "霧隠れ", effect: "回避率25%" }, leftMove: moves.ambush },
+  { no: 18, name: "ゴッレム", rank: "F", attribute: "緑", hp: 77, power: 25, star: 5, expTable: "A", passive: { name: "頑丈", effect: "相手からのダメージを10減らす" }, leftMove: moves.charge },
+  { no: 19, name: "ピクシィィ", rank: "F", attribute: "青", hp: 65, power: 18, star: 27, expTable: "A", passive: { name: "幸運", effect: "戦闘開始時、ゲージを3増やす" }, leftMove: moves.healingWater },
+  { no: 20, name: "ゾンビビッグ", rank: "F", attribute: "黒", hp: 68, power: 29, star: 9, expTable: "A", passive: { name: "アンデッド", effect: "HPが0になる時、30%でHP1で耐える" }, leftMove: moves.poisonBreath },
+  { no: 21, name: "スライム兄", rank: "F", attribute: "青", hp: 70, power: 20, star: 18, expTable: "A", passive: { name: "王の威厳", effect: "攻撃時、25%で相手に怯みを付与" }, rightMoves: [{ name: "アタック", attribute: "青", gauge: 1, multiplier: 1, effect: "使用者の属性で通常攻撃" }], leftMove: moves.slimePress },
+  { no: 39, name: "ゴールドピクシィィ", rank: "F", attribute: "青", hp: 65, power: 18, star: 27, expTable: "A", passive: { name: "黄金の幸運", effect: "40%で逃走。倒すと追加経験値1000" }, leftMove: moves.healingWater, escapeChance: 0.4, defeatExperienceBonus: 1000 }
 ];
 const monsterRanks = [
   { name: "G", hp: 30, power: 10, star: 10, weight: 38, color: "#59636b", bg: "#edf0f2" },
@@ -47,14 +66,18 @@ const monsterRanks = [
 ];
 const MAX_FRIENDS = 100;
 const CAGE_PRICE = 100;
+const CAGE_F_PRICE = 300;
 const EXP_DRINK_PRICE = 200;
 const EXP_DRINK_AMOUNT = 500;
 const OUTGOING_MATCH_REFRESH_MS = 6 * 60 * 60 * 1000;
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 3;
 const AUTOSAVE_KEY = "monmachi.save.autosave";
 const MANUAL_SAVE_PREFIX = "monmachi.save.slot.";
 const MANUAL_SAVE_SLOT_COUNT = 5;
 const AUTOSAVE_DELAY_MS = 250;
+const PAIR_TRAIN_EVOLUTIONS = [
+  // { baseSpecies: 1, partnerSpecies: 2, resultSpecies: 9 }
+];
 const PLAYER_RANK_UNLOCKS = [
   { level: 1, rank: "G" },
   { level: 3, rank: "F" },
@@ -65,6 +88,38 @@ const PLAYER_RANK_UNLOCKS = [
   { level: 23, rank: "A" },
   { level: 30, rank: "S" }
 ];
+
+function rankIndex(rankName) {
+  return monsterRanks.findIndex((rank) => rank.name === rankName);
+}
+
+function cageCanHold(cageType, monster) {
+  const cageRank = cageType === "F" ? "F" : "G";
+  return rankIndex(monster.rank.name) <= rankIndex(cageRank);
+}
+
+function cageCount(cageType) {
+  return cageType === "F" ? state.cagesF : state.cages;
+}
+
+function hasCompatibleCage(monster) {
+  return (state.cages > 0 && cageCanHold("G", monster))
+    || (state.cagesF > 0 && cageCanHold("F", monster));
+}
+
+function preferredCageType(monster) {
+  if (state.cages > 0 && cageCanHold("G", monster)) return "G";
+  if (state.cagesF > 0 && cageCanHold("F", monster)) return "F";
+  return null;
+}
+
+function consumeCage(cageType) {
+  if (cageType === "F") {
+    state.cagesF = Math.max(0, state.cagesF - 1);
+  } else {
+    state.cages = Math.max(0, state.cages - 1);
+  }
+}
 const MAX_BATTLE_GAUGE = 10;
 const BATTLE_SPEED_OPTIONS = [1, 2, 3, 5, 7];
 const DEFAULT_BATTLE_SPEED = 3;
@@ -192,7 +247,7 @@ const DUNGEON_CONFIG = {
     ],
     rushes: [
       { species: [6, 1, 1], level: 4, hpMultiplier: 1 },
-      { species: [5, 1, 1, 1], level: 4, hpMultiplier: 1 }
+      { species: [5, 1, 1], level: 4, hpMultiplier: 1 }
     ],
     bosses: [
       { species: 6, level: 5, hpMultiplier: 1 },
@@ -217,6 +272,82 @@ const DUNGEON_CONFIG = {
       { species: [11, 11, 11], level: 5, hpMultiplier: 1 }
     ],
     bosses: [{ species: 10, level: 8, hpMultiplier: 1 }]
+  },
+  geniusShape: {
+    number: "06",
+    category: "general",
+    unlockAfter: "alley",
+    name: "天才の形",
+    baseExperience: 30,
+    specialExperienceMultiplier: 1,
+    requestReferenceStar: 20,
+    requestTables: [
+      { name: "A", baseRate: 70, monsters: [13, 15].map((species) => ({ species, level: 6, weight: 1 })) },
+      { name: "B", baseRate: 20, monsters: [{ species: 14, level: 6, weight: 1 }] },
+      { name: "C", baseRate: 10, monsters: [{ species: 14, level: 8, talent: 1, weight: 1 }] }
+    ],
+    enemyIv: { hp: 0, atk: 0, sense: 0 },
+    rushes: [
+      { species: [13, 13, 13], level: 8, hpMultiplier: 1 },
+      { species: [15, 15, 15], level: 8, hpMultiplier: 1 }
+    ],
+    bosses: [{ species: 14, level: 12, hpMultiplier: 1 }]
+  },
+  zombieTown: {
+    number: "07",
+    category: "general",
+    unlockAfter: "geniusShape",
+    name: "闇のゾンビ街",
+    baseExperience: 35,
+    specialExperienceMultiplier: 1,
+    requestReferenceStar: 15,
+    requestTables: [
+      { name: "A", baseRate: 65, monsters: [{ species: 12, level: 7, weight: 1 }] },
+      { name: "B", baseRate: 30, monsters: [{ species: 12, level: 9, weight: 1 }] },
+      { name: "C", baseRate: 5, monsters: [{ species: 20, level: 11, weight: 1 }] }
+    ],
+    enemyIv: { hp: 2, atk: 0, sense: 0 },
+    rushes: [
+      { species: [12, 12, 16], level: 10, hpMultiplier: 1 },
+      { species: [12, 12, 5], level: 11, hpMultiplier: 1 },
+      { species: [12, 12, 17], levels: [11, 11, 13], hpMultiplier: 1 }
+    ],
+    bosses: [
+      { species: 12, level: 11, hpMultiplier: 1 },
+      { species: 20, level: 14, hpMultiplier: 1 }
+    ]
+  },
+  persistentHappiness: {
+    number: "08",
+    category: "general",
+    unlockAfter: "zombieTown",
+    name: "幸せのしつこさ",
+    baseExperience: 40,
+    specialExperienceMultiplier: 1,
+    requestReferenceStar: 40,
+    requestTables: [
+      {
+        name: "A",
+        baseRate: 65,
+        monsters: [
+          { species: 19, level: 8, weight: 1 },
+          { species: 19, level: 9, weight: 1 }
+        ]
+      },
+      { name: "B", baseRate: 30, monsters: [{ species: 19, level: 10, weight: 1 }] },
+      { name: "C", baseRate: 5, monsters: [{ species: 39, level: 15, weight: 1 }] }
+    ],
+    enemyIvRange: { min: 0, max: 1 },
+    rushes: [
+      { species: [19, 19, 19], level: 13, hpMultiplier: 1 },
+      { species: [19, 19, 39], level: 14, hpMultiplier: 1 },
+      { species: [19, 19, 39], level: 15, hpMultiplier: 1 }
+    ],
+    bosses: [
+      { species: 19, level: 15, hpMultiplier: 1 },
+      { species: 19, level: 15, hpMultiplier: 1 },
+      { species: 19, level: 15, hpMultiplier: 1 }
+    ]
   },
   trial2: {
     number: "Lv2",
@@ -255,10 +386,27 @@ const DUNGEON_CONFIG = {
     rewardPlayerLevel: 4,
     rushes: [
       { species: [12, 12, 12], level: 7, hpMultiplier: 1 },
-      { species: [13, 13, 13], level: 8, hpMultiplier: 1 },
+      { species: [16, 16, 16], level: 8, hpMultiplier: 1 },
       { species: [5, 5, 5], level: 10, hpMultiplier: 1 }
     ],
-    bosses: [{ species: 14, level: 15, hpMultiplier: 1 }]
+    bosses: [{ species: 17, level: 15, hpMultiplier: 1 }]
+  },
+  trial5: {
+    number: "Lv5",
+    category: "trial",
+    requiredPlayerLevel: 4,
+    name: "昇格戦 Lv5",
+    baseExperience: 30,
+    rewardPlayerLevel: 5,
+    rushes: [
+      { species: [8, 8, 2], level: 10, hpMultiplier: 1 },
+      { species: [8, 2, 2], level: 10, hpMultiplier: 1 }
+    ],
+    bosses: [
+      { species: 8, level: 15, hpMultiplier: 1 },
+      { species: 2, level: 15, hpMultiplier: 1 },
+      { species: 18, level: 18, hpMultiplier: 1 }
+    ]
   }
 };
 const RANK_EXPERIENCE_MULTIPLIERS = {
@@ -292,6 +440,7 @@ const state = {
   playerName: "プレイヤー",
   gold: 320,
   cages: 1,
+  cagesF: 0,
   expDrinks: 0,
   friends: [],
   friendSequence: 0,
@@ -299,11 +448,17 @@ const state = {
   collectionAttributeFilter: "all",
   partyPickerSort: "newest",
   partyPickerAttributeFilter: "all",
+  pairBaseId: null,
+  pairPartnerId: null,
+  pairPickerMode: "base",
+  pendingPairResult: null,
+  pairTrainingTimers: [],
   outgoingCandidates: [],
   outgoingGeneratedAt: 0,
   outgoingApplied: false,
   outgoingTimer: null,
   pendingOutgoingMonsterId: null,
+  selectedOutgoingCageType: null,
   discoveredSpecies: new Set([1, 2, 3, 4, 5, 6]),
   profileMonsterIds: [],
   editingProfileMonsterIds: [],
@@ -355,6 +510,7 @@ const state = {
   tutorialPrinceId: null,
   tutorialContinue: null,
   pendingRecruit: null,
+  pendingRecruitCageType: null,
   matchAnimationActive: false,
   matchAnimationTimers: [],
   experienceContinue: null,
@@ -388,11 +544,20 @@ function cacheElements() {
     "benchActionDialog", "benchActionName", "benchActionMonster",
     "closeBenchAction", "benchDetailButton", "benchSwitchButton",
     "monsterHomePanel", "dungeonHomePanel", "trainingHomePanel", "matchHomePanel", "shopHomePanel",
+    "pairBaseSlot", "pairPartnerSlot", "pairTrainingPreview", "pairTrainingStart",
+    "pairPickerDialog", "pairPickerTitle", "pairPickerCopy", "pairPickerRoster", "closePairPicker",
+    "pairEvolutionDialog", "pairEvolutionTitle", "pairEvolutionTarget",
+    "declinePairEvolution", "acceptPairEvolution",
+    "pairTrainingOverlay", "pairTrainingBaseMonster", "pairTrainingPartnerMonster",
+    "pairTrainingStageLabel", "pairResultDialog", "pairResultMonster",
+    "pairResultStats", "pairResultGoodbye", "closePairResult",
     "dungeonCategoryTabs", "generalDungeonList", "trialDungeonList",
     "monsterTabButton", "dungeonTabButton", "trainingTabButton", "matchTabButton", "shopTabButton",
-    "shopGold", "shopCageCount", "buyCageButton", "shopFeedback",
+    "shopGold", "shopCageCount", "buyCageButton", "shopCageFCount", "buyCageFButton",
+    "shopFeedback",
     "shopExpDrinkCount", "buyExpDrinkButton", "useExpDrinkButton",
     "expDrinkDialog", "closeExpDrinkDialog", "expDrinkRoster",
+    "expDrinkDialogStatus", "expDrinkFeedback",
     "collectionCount", "collectionGrid", "collectionSort", "collectionAttributeFilter",
     "openPartyEditorButton",
     "partyDialog", "closePartyDialog", "selectedDungeonName",
@@ -408,8 +573,8 @@ function cacheElements() {
     "profileDialog", "closeProfileDialog", "playerNameInput", "profileEditorSlots",
     "saveProfileButton", "profilePickerDialog", "profilePickerTitle",
     "closeProfilePicker", "profilePickerRoster",
-    "cageSelectDialog", "closeCageSelect", "standardCageChoice",
-    "outgoingCageCount", "confirmOutgoingApplication",
+    "cageSelectDialog", "closeCageSelect", "standardCageChoice", "fCageChoice",
+    "outgoingCageCount", "outgoingCageFCount", "confirmOutgoingApplication",
     "roster", "diveButton", "battleKind", "battleTitle",
     "battleSpeedButton", "battleSpeedValue",
     "battleDots", "rushBattleArea", "rushEnemyHpList", "rushAllyHpList",
@@ -489,12 +654,13 @@ function individualMultiplier(individualValue) {
 
 function talentMultiplier(talent) {
   return 1 + GROWTH_CONFIG.talentCoefficient
-    * Math.pow(Math.max(0, talent), GROWTH_CONFIG.talentExponent);
+    * Math.pow(Math.max(1, talent), GROWTH_CONFIG.talentExponent);
 }
 
 function calculateMonsterStats(monster) {
+  const talent = Math.max(1, Number(monster.talent) || 1);
   const growth = 1 + ((monster.level - 1) / GROWTH_CONFIG.levelDivisor)
-    * talentMultiplier(monster.talent);
+    * talentMultiplier(talent);
   const statKeys = [
     ["hp", "hp"],
     ["power", "atk"],
@@ -514,6 +680,7 @@ function calculateMonsterStats(monster) {
 }
 
 function applyCalculatedStats(monster) {
+  monster.talent = Math.max(1, Number(monster.talent) || 1);
   const calculated = calculateMonsterStats(monster);
   monster.initialStats = calculated.initialStats;
   monster.finalStats = calculated.finalStats;
@@ -525,16 +692,31 @@ function applyCalculatedStats(monster) {
   return monster;
 }
 
+function speciesBaseStats(speciesNo, rankName = null) {
+  const species = monsterSpecies.find((candidate) => candidate.no === speciesNo);
+  if (!species) return { hp: 1, power: 1, star: 1 };
+  const speciesRank = monsterRanks.find((candidate) => candidate.name === species.rank)
+    ?? monsterRanks[0];
+  const rank = monsterRanks.find((candidate) => candidate.name === rankName)
+    ?? speciesRank;
+  return {
+    hp: species.hp * (rank.hp / speciesRank.hp),
+    power: species.power * (rank.power / speciesRank.power),
+    star: species.star * (rank.star / speciesRank.star)
+  };
+}
+
 function calculateTrainingBonus(parentA, parentB) {
   return {
-    hp: (parentA.finalStats.hp + parentB.finalStats.hp) / GROWTH_CONFIG.trainingDivisor,
-    power: (parentA.finalStats.power + parentB.finalStats.power) / GROWTH_CONFIG.trainingDivisor,
-    star: (parentA.finalStats.star + parentB.finalStats.star) / GROWTH_CONFIG.trainingDivisor
+    hp: Math.ceil((parentA.hp + parentB.hp) / 4),
+    power: Math.ceil((parentA.power + parentB.power) / 4),
+    star: Math.ceil((parentA.star + parentB.star) / 4)
   };
 }
 
 function combinedTalent(parentA, parentB) {
-  return parentA.talent + parentB.talent;
+  return Math.max(1, Number(parentA.talent) || 1)
+    + Math.max(1, Number(parentB.talent) || 1);
 }
 
 function nextLevelExperience(monster) {
@@ -567,12 +749,13 @@ function calculateDefeatExperience(enemyMonster, recipientMonster) {
       * levelMultiplier
       * levelDifferenceCorrection
       * specialMultiplier
-  ));
+  ) + Math.max(0, Number(enemyMonster.defeatExperienceBonus) || 0));
 }
 
 function calculatePartyExperience(defeatedEnemies) {
+  const defeated = defeatedEnemies.filter((enemy) => !enemy.escaped);
   return new Map(state.allies.map((fighter) => {
-    const amount = defeatedEnemies.reduce(
+    const amount = defeated.reduce(
       (total, enemy) => total + calculateDefeatExperience(enemy.monster, fighter.monster),
       0
     );
@@ -581,7 +764,7 @@ function calculatePartyExperience(defeatedEnemies) {
 }
 
 function calculateBattleGold(defeatedEnemies) {
-  return defeatedEnemies.reduce(
+  return defeatedEnemies.filter((enemy) => !enemy.escaped).reduce(
     (total, enemy) => total + Math.round(enemy.monster.sp / 2),
     0
   );
@@ -735,11 +918,21 @@ function createMonster(boost = 0, speciesNo = null, levelOverride = null, option
   };
   const level = levelOverride ?? Math.max(1, 1 + Math.floor(boost / 2) + randomInt(0, 2));
   const fixedIv = Number.isInteger(options.fixedIv) ? options.fixedIv : null;
-  const iv = {
-    hp: fixedIv ?? randomInt(0, 5),
-    atk: fixedIv ?? randomInt(0, 5),
-    sense: fixedIv ?? randomInt(0, 5)
-  };
+  const ivRange = options.ivRange;
+  const randomIv = () => ivRange
+    ? randomInt(ivRange.min ?? 0, ivRange.max ?? 5)
+    : randomInt(0, 5);
+  const iv = options.iv
+    ? {
+        hp: options.iv.hp ?? randomIv(),
+        atk: options.iv.atk ?? randomIv(),
+        sense: options.iv.sense ?? randomIv()
+      }
+    : {
+        hp: fixedIv ?? randomIv(),
+        atk: fixedIv ?? randomIv(),
+        sense: fixedIv ?? randomIv()
+      };
   const rightMoveCandidates = species.rightMoves ?? [normalAttack(species.attribute)];
   const leftMoveCandidates = species.leftMoves ?? [species.leftMove].filter(Boolean);
   const passiveCandidates = species.passives ?? [species.passive].filter(Boolean);
@@ -756,7 +949,7 @@ function createMonster(boost = 0, speciesNo = null, levelOverride = null, option
     expTable: species.expTable,
     experience: 0,
     level,
-    talent: 0,
+    talent: Math.max(1, Number(options.talent) || 1),
     baseStats: {
       hp: species.hp * rankScale.hp,
       power: species.power * rankScale.power,
@@ -780,6 +973,8 @@ function createMonster(boost = 0, speciesNo = null, levelOverride = null, option
     leftMoveEffect: leftMove.effect,
     trait: selectedPassive?.name ?? "なし",
     traitEffect: selectedPassive?.effect ?? "パッシブなし",
+    escapeChance: species.escapeChance ?? 0,
+    defeatExperienceBonus: species.defeatExperienceBonus ?? 0,
     iv,
     bodyRadius: `${randomInt(38, 58)}% ${randomInt(42, 62)}% ${randomInt(38, 58)}% ${randomInt(42, 62)}% / ${randomInt(45, 65)}% ${randomInt(45, 65)}% ${randomInt(35, 55)}% ${randomInt(35, 55)}%`,
     hornTilt: `${randomInt(-18, 18)}deg`,
@@ -822,7 +1017,7 @@ function hydrateMonster(savedMonster) {
     expTable: savedMonster.expTable || species.expTable || "A",
     experience: Math.max(0, Number(savedMonster.experience) || 0),
     level: Math.max(1, Number(savedMonster.level) || 1),
-    talent: Math.max(0, Number(savedMonster.talent) || 0),
+    talent: Math.max(1, Number(savedMonster.talent) || 1),
     baseStats: savedMonster.baseStats ?? {
       hp: species.hp,
       power: species.power,
@@ -830,6 +1025,10 @@ function hydrateMonster(savedMonster) {
     },
     trainingBonus: savedMonster.trainingBonus ?? { hp: 0, power: 0, star: 0 },
     iv: savedMonster.iv ?? { hp: 0, atk: 0, sense: 0 },
+    escapeChance: savedMonster.escapeChance ?? species.escapeChance ?? 0,
+    defeatExperienceBonus: savedMonster.defeatExperienceBonus
+      ?? species.defeatExperienceBonus
+      ?? 0,
     leftMoves: savedMonster.leftMoves?.length
       ? savedMonster.leftMoves
       : [fallbackLeftMove].filter(Boolean),
@@ -858,6 +1057,7 @@ function createSaveData() {
     playerName: state.playerName,
     gold: state.gold,
     cages: state.cages,
+    cagesF: state.cagesF,
     expDrinks: state.expDrinks,
     friends: state.friends.map(serializeMonster),
     friendSequence: state.friendSequence,
@@ -888,6 +1088,24 @@ function migrateSaveData(savedData) {
   const migrated = { ...savedData };
   if (!migrated.saveVersion) migrated.saveVersion = 1;
   if (migrated.saveVersion > SAVE_VERSION) return null;
+  if (migrated.saveVersion < 2) {
+    migrated.cagesF = 0;
+  }
+  if (migrated.saveVersion < 3) {
+    const remapLegacySpecies = (monster) => {
+      if (!monster) return monster;
+      if (monster.speciesNo === 13 && monster.name === "ナメナメラ") {
+        return { ...monster, speciesNo: 16 };
+      }
+      if (monster.speciesNo === 14 && monster.name === "シャド") {
+        return { ...monster, speciesNo: 17 };
+      }
+      return monster;
+    };
+    migrated.friends = (migrated.friends ?? []).map(remapLegacySpecies);
+    migrated.outgoingCandidates = (migrated.outgoingCandidates ?? []).map(remapLegacySpecies);
+    migrated.requests = (migrated.requests ?? []).map(remapLegacySpecies);
+  }
   migrated.saveVersion = SAVE_VERSION;
   return migrated;
 }
@@ -942,6 +1160,7 @@ function applySaveData(rawSave) {
   state.playerName = saved.playerName || "プレイヤー";
   state.gold = Math.max(0, Number(saved.gold) || 0);
   state.cages = Math.max(0, Number(saved.cages) || 0);
+  state.cagesF = Math.max(0, Number(saved.cagesF) || 0);
   state.expDrinks = Math.max(0, Number(saved.expDrinks) || 0);
   state.friends = friends;
   state.friendSequence = Math.max(
@@ -972,7 +1191,7 @@ function applySaveData(rawSave) {
   state.homeTab = ["monsters", "dungeon", "training", "match", "shop"].includes(saved.homeTab)
     ? saved.homeTab
     : "monsters";
-  if (state.homeTab === "training" && state.playerLevel < 6) {
+  if (state.homeTab === "training" && state.playerLevel < 5) {
     state.homeTab = "monsters";
   }
   state.dungeonCategory = saved.dungeonCategory === "trial" ? "trial" : "general";
@@ -1072,6 +1291,7 @@ function startTutorial() {
   state.playerName = "プレイヤー";
   state.gold = 320;
   state.cages = 1;
+  state.cagesF = 0;
   state.expDrinks = 0;
   state.friends = [];
   state.friendSequence = 0;
@@ -1110,6 +1330,7 @@ function beginTutorialRecruiting() {
 
 function afterTutorialPrinceMatched() {
   state.cages = 2;
+  state.cagesF = 0;
   state.requests = [];
   state.requestIndex = 0;
   state.tutorialStage = "recruitIntro";
@@ -1125,6 +1346,7 @@ function resetTutorialRecruitment() {
   const prince = state.friends.find((monster) => monster.id === state.tutorialPrinceId);
   state.gold = 320;
   state.cages = 2;
+  state.cagesF = 0;
   state.friends = prince ? [prince] : [];
   state.friendSequence = prince ? 1 : 0;
   if (prince) prince.acquiredOrder = 1;
@@ -1168,6 +1390,7 @@ function skipTutorial() {
   els.tutorialOverlay.hidden = true;
   state.gold = 320;
   state.cages = 0;
+  state.cagesF = 0;
   state.expDrinks = 0;
   state.friends = [];
   state.friendSequence = 0;
@@ -1199,26 +1422,33 @@ function updateResources() {
   els.outgoingCountLabel.textContent = outgoingUnlocked
     ? `${3 + state.playerLevel}体`
     : "Lv3";
-  const trainingUnlocked = state.playerLevel >= 6;
+  const trainingUnlocked = state.playerLevel >= 5;
   els.trainingTabButton.classList.toggle("locked", !trainingUnlocked);
   els.trainingTabButton.querySelector(".tab-lock-label").hidden = trainingUnlocked;
   els.friends.textContent = state.friends.length;
   els.gold.textContent = state.gold;
   els.shopGold.textContent = state.gold;
   els.shopCageCount.textContent = state.cages;
+  els.shopCageFCount.textContent = state.cagesF;
   els.outgoingCageCount.textContent = state.cages;
+  els.outgoingCageFCount.textContent = state.cagesF;
   els.shopExpDrinkCount.textContent = state.expDrinks;
-  els.matchCageCount.textContent = state.cages;
+  els.matchCageCount.textContent = `G ${state.cages} / F ${state.cagesF}`;
   els.buyCageButton.disabled = state.gold < CAGE_PRICE;
+  els.buyCageFButton.disabled = state.gold < CAGE_F_PRICE;
   els.buyExpDrinkButton.disabled = state.gold < EXP_DRINK_PRICE;
   els.useExpDrinkButton.disabled = state.expDrinks <= 0 || state.friends.length === 0;
-  els.keepButton.disabled = state.cages <= 0;
+  const requestMonster = state.requests[state.requestIndex];
+  const canRecruitCurrent = requestMonster ? hasCompatibleCage(requestMonster) : false;
+  els.keepButton.disabled = !canRecruitCurrent;
   els.skipButton.disabled = state.tutorialStage === "prince";
   els.rejectAllRequestsButton.disabled = isTutorialActive();
   els.exitRequestsButton.disabled = isTutorialActive();
-  els.matchCageStatus.classList.toggle("empty", state.cages <= 0);
-  els.matchCageLabel.textContent = state.cages > 0 ? "ケージ" : "ケージがありません";
-  els.matchCageCount.hidden = state.cages <= 0;
+  els.matchCageStatus.classList.toggle("empty", !canRecruitCurrent);
+  els.matchCageLabel.textContent = canRecruitCurrent
+    ? "ケージ"
+    : "使えるケージがありません";
+  els.matchCageCount.hidden = !canRecruitCurrent;
   updateRequestInbox();
   scheduleAutosave();
 }
@@ -1438,12 +1668,12 @@ function outgoingCandidateMarkup(monster) {
         <span class="outgoing-level">Lv ${monster.level}</span>
         <div class="outgoing-monster-title">
           <strong>${monster.name}</strong>
-          <i class="inline-rank" style="${rankStyle(monster.rank)}">ランク ${monster.rank.name}</i>
+          <i class="inline-rank" style="${rankStyle(monster.rank)}">${monster.rank.name}</i>
         </div>
         <span class="sp-chip">SP ${monster.sp}</span>
       </div>
       <button class="outgoing-apply-button" data-outgoing-id="${monster.id}" type="button"
-        ${state.outgoingApplied || !profileReady || state.cages <= 0 ? "disabled" : ""}>
+        ${state.outgoingApplied || !profileReady || !hasCompatibleCage(monster) ? "disabled" : ""}>
         <span>マッチ申請</span>
         <strong>${Math.round(rate)}%</strong>
       </button>
@@ -1459,8 +1689,11 @@ function renderOutgoingMatch() {
     els.outgoingMatchFeedback.textContent = "プロフィールに3体設定するとマッチ申請できます。";
     els.outgoingMatchFeedback.className = "outgoing-match-feedback warning";
     els.outgoingMatchFeedback.hidden = false;
-  } else if (!state.outgoingApplied && state.cages <= 0) {
-    els.outgoingMatchFeedback.textContent = "ケージがありません。ショップで購入すると申請できます。";
+  } else if (
+    !state.outgoingApplied
+    && !state.outgoingCandidates.some((monster) => hasCompatibleCage(monster))
+  ) {
+    els.outgoingMatchFeedback.textContent = "表示中のモンスターに使えるケージがありません。";
     els.outgoingMatchFeedback.className = "outgoing-match-feedback warning";
     els.outgoingMatchFeedback.hidden = false;
   }
@@ -1521,10 +1754,18 @@ function closeOutgoingMatch() {
 }
 
 function openCageSelection(monsterId) {
-  if (state.outgoingApplied || profileMonsters().length !== 3 || state.cages <= 0) return;
+  if (state.outgoingApplied || profileMonsters().length !== 3) return;
+  const monster = state.outgoingCandidates.find((candidate) => candidate.id === monsterId);
+  if (!monster || !hasCompatibleCage(monster)) return;
   state.pendingOutgoingMonsterId = monsterId;
-  els.standardCageChoice.classList.add("selected");
-  els.confirmOutgoingApplication.disabled = false;
+  state.selectedOutgoingCageType = preferredCageType(monster);
+  ["G", "F"].forEach((type) => {
+    const choice = type === "G" ? els.standardCageChoice : els.fCageChoice;
+    const available = cageCount(type) > 0 && cageCanHold(type, monster);
+    choice.disabled = !available;
+    choice.classList.toggle("selected", type === state.selectedOutgoingCageType);
+  });
+  els.confirmOutgoingApplication.disabled = !state.selectedOutgoingCageType;
   els.cageSelectDialog.showModal();
 }
 
@@ -1534,15 +1775,22 @@ function cageSuccessMultiplier(cageType = "standard") {
 }
 
 function applyOutgoingMatch() {
-  if (state.outgoingApplied || profileMonsters().length !== 3 || state.cages <= 0) return;
+  if (state.outgoingApplied || profileMonsters().length !== 3) return;
   const monsterId = state.pendingOutgoingMonsterId;
   const monster = state.outgoingCandidates.find((candidate) => candidate.id === monsterId);
-  if (!monster) return;
-  const rate = Math.min(100, outgoingMatchRate(monster) * cageSuccessMultiplier("standard"));
+  const cageType = state.selectedOutgoingCageType;
+  if (
+    !monster
+    || !cageType
+    || cageCount(cageType) <= 0
+    || !cageCanHold(cageType, monster)
+  ) return;
+  const rate = Math.min(100, outgoingMatchRate(monster) * cageSuccessMultiplier(cageType));
   const success = Math.random() * 100 < rate;
-  state.cages -= 1;
+  consumeCage(cageType);
   state.outgoingApplied = true;
   state.pendingOutgoingMonsterId = null;
+  state.selectedOutgoingCageType = null;
   els.cageSelectDialog.close();
   els.outgoingMatchFeedback.className = `outgoing-match-feedback ${success ? "success" : "failure"}`;
   if (success && state.friends.length < MAX_FRIENDS) {
@@ -1665,7 +1913,7 @@ function monsterListCardMarkup(monster, dataAttribute, selectedSlot = -1) {
         <strong class="monster-list-name">${monster.name}</strong>
         <span class="monster-list-meta">
           <i class="level-chip">Lv ${monster.level}</i>
-          <i class="inline-rank" style="${rankStyle(monster.rank)}">ランク ${monster.rank.name}</i>
+          <i class="inline-rank" style="${rankStyle(monster.rank)}">${monster.rank.name}</i>
           <i class="attribute-chip" style="--attr-bg:${monster.attr.bg};--attr-color:${monster.attr.color}">${monster.attr.name}</i>
         </span>
         <span class="sp-chip monster-list-sp">SP ${monster.sp}</span>
@@ -1674,8 +1922,290 @@ function monsterListCardMarkup(monster, dataAttribute, selectedSlot = -1) {
     </button>`;
 }
 
+function pairTrainEvolution(baseMonster, partnerMonster) {
+  if (!baseMonster || !partnerMonster) return null;
+  return PAIR_TRAIN_EVOLUTIONS.find((recipe) => (
+    recipe.baseSpecies === baseMonster.speciesNo
+      && recipe.partnerSpecies === partnerMonster.speciesNo
+  )) ?? null;
+}
+
+function isMonsterAssigned(monsterId) {
+  return state.partyPresets.some((preset) => preset.includes(monsterId))
+    || state.profileMonsterIds.includes(monsterId);
+}
+
+function pairTrainStats(baseMonster, partnerMonster) {
+  const trainingBonus = calculateTrainingBonus(baseMonster, partnerMonster);
+  const baseStats = speciesBaseStats(baseMonster.speciesNo, baseMonster.rank.name);
+  return {
+    hp: Math.max(1, Math.round(
+      (baseStats.hp + trainingBonus.hp) * individualMultiplier(baseMonster.iv.hp)
+    )),
+    power: Math.max(1, Math.round(
+      (baseStats.power + trainingBonus.power) * individualMultiplier(baseMonster.iv.atk)
+    )),
+    star: Math.max(1, Math.round(
+      (baseStats.star + trainingBonus.star) * individualMultiplier(baseMonster.iv.sense)
+    ))
+  };
+}
+
+function pairSlotMarkup(monster, emptyLabel) {
+  if (!monster) {
+    return `
+      <span class="pair-slot-label">${emptyLabel === "ベースを選ぶ" ? "BASE" : "PARTNER"}</span>
+      <span class="pair-slot-empty">${emptyLabel}</span>`;
+  }
+  return `
+    <span class="pair-slot-label">${emptyLabel === "ベースを選ぶ" ? "BASE" : "PARTNER"}</span>
+    <span class="pair-slot-monster">
+      <span class="mini-monster" style="${monsterStyle(monster)}"></span>
+      <span>
+        <strong>${monster.name}</strong>
+        <small>Lv ${monster.level} / SP ${monster.sp}</small>
+      </span>
+    </span>`;
+}
+
+function renderPairTraining() {
+  if (!els.pairBaseSlot) return;
+  const baseMonster = state.friends.find((monster) => monster.id === state.pairBaseId);
+  const partnerMonster = state.friends.find((monster) => monster.id === state.pairPartnerId);
+  if (!baseMonster) {
+    state.pairBaseId = null;
+    state.pairPartnerId = null;
+  }
+  if (!partnerMonster || partnerMonster.id === state.pairBaseId) {
+    state.pairPartnerId = null;
+  }
+  const currentBase = state.friends.find((monster) => monster.id === state.pairBaseId);
+  const currentPartner = state.friends.find((monster) => monster.id === state.pairPartnerId);
+  els.pairBaseSlot.innerHTML = pairSlotMarkup(currentBase, "ベースを選ぶ");
+  els.pairPartnerSlot.innerHTML = pairSlotMarkup(currentPartner, "相手を選ぶ");
+  els.pairPartnerSlot.disabled = !currentBase;
+
+  if (currentBase && currentPartner) {
+    const stats = pairTrainStats(currentBase, currentPartner);
+    const talent = combinedTalent(currentBase, currentPartner);
+    const evolution = pairTrainEvolution(currentBase, currentPartner);
+    els.pairTrainingPreview.hidden = false;
+    els.pairTrainingPreview.innerHTML = `
+      <div class="pair-preview-heading">
+        <span>ペアトレ後 Lv1</span>
+        ${evolution ? "<strong>進化可能</strong>" : ""}
+      </div>
+      <div class="pair-preview-stats">
+        <span><small>HP</small><b>${stats.hp}</b></span>
+        <span><small>パワー</small><b>${stats.power}</b></span>
+        <span><small>スター</small><b>${stats.star}</b></span>
+        <span><small>才能</small><b>${talent}</b></span>
+      </div>`;
+  } else {
+    els.pairTrainingPreview.hidden = true;
+    els.pairTrainingPreview.innerHTML = "";
+  }
+  els.pairTrainingStart.disabled = !(currentBase && currentPartner);
+}
+
+function pairPickerCardMarkup(monster, mode) {
+  const isBase = mode === "base";
+  const isSelf = monster.id === state.pairBaseId;
+  const assigned = !isBase && isMonsterAssigned(monster.id);
+  const tooLow = monster.level < 10;
+  const disabled = tooLow || isSelf || assigned;
+  const evolution = !disabled && !isBase
+    ? pairTrainEvolution(
+        state.friends.find((friend) => friend.id === state.pairBaseId),
+        monster
+      )
+    : null;
+  let reason = "";
+  if (tooLow) reason = "Lv10で解放";
+  else if (isSelf) reason = "ベース選択中";
+  else if (assigned) reason = "編成・プロフィール使用中";
+  return `
+    <button class="monster-list-card pair-picker-card${evolution ? " pair-evolution-ready" : ""}"
+      data-pair-monster-id="${monster.id}" type="button" ${disabled ? "disabled" : ""}>
+      <span class="monster-list-visual" style="--list-bg:${monster.attr.bg}">
+        <span class="mini-monster" style="${monsterStyle(monster)}"></span>
+      </span>
+      <span class="monster-list-info">
+        <strong class="monster-list-name">${monster.name}</strong>
+        <span class="monster-list-meta">
+          <i class="level-chip">Lv ${monster.level}</i>
+          <i class="inline-rank" style="${rankStyle(monster.rank)}">${monster.rank.name}</i>
+          <i class="attribute-chip" style="--attr-bg:${monster.attr.bg};--attr-color:${monster.attr.color}">${monster.attr.name}</i>
+        </span>
+        <span class="sp-chip monster-list-sp">SP ${monster.sp}</span>
+        ${evolution ? "<em class=\"pair-evolution-label\">進化可能</em>" : ""}
+        ${reason ? `<em class="pair-disabled-reason">${reason}</em>` : ""}
+      </span>
+    </button>`;
+}
+
+function openPairPicker(mode) {
+  if (mode === "partner" && !state.pairBaseId) return;
+  state.pairPickerMode = mode;
+  els.pairPickerTitle.textContent = mode === "base" ? "ベースを選ぶ" : "ペア相手を選ぶ";
+  els.pairPickerCopy.textContent = mode === "base"
+    ? "Lv10以上のベースモンスターを選択してください。"
+    : "Lv10以上のペア相手を選択してください。編成中のモンスターは選べません。";
+  els.pairPickerRoster.innerHTML = state.friends.length
+    ? state.friends.map((monster) => pairPickerCardMarkup(monster, mode)).join("")
+    : "<p class=\"collection-empty\">仲間モンスターがいません。</p>";
+  els.pairPickerDialog.showModal();
+}
+
+function selectPairMonster(monsterId) {
+  const monster = state.friends.find((friend) => friend.id === monsterId);
+  if (!monster || monster.level < 10) return;
+  if (state.pairPickerMode === "base") {
+    state.pairBaseId = monster.id;
+    if (state.pairPartnerId === monster.id) state.pairPartnerId = null;
+  } else {
+    if (monster.id === state.pairBaseId || isMonsterAssigned(monster.id)) return;
+    state.pairPartnerId = monster.id;
+  }
+  els.pairPickerDialog.close();
+  renderPairTraining();
+}
+
+function clearPairTrainingTimers() {
+  state.pairTrainingTimers.forEach((timer) => clearTimeout(timer));
+  state.pairTrainingTimers = [];
+}
+
+function pairTrainingDelay(callback, delay) {
+  const timer = setTimeout(callback, delay);
+  state.pairTrainingTimers.push(timer);
+}
+
+function startPairTraining() {
+  const baseMonster = state.friends.find((monster) => monster.id === state.pairBaseId);
+  const partnerMonster = state.friends.find((monster) => monster.id === state.pairPartnerId);
+  if (!baseMonster || !partnerMonster || baseMonster.level < 10 || partnerMonster.level < 10) return;
+  state.pendingPairResult = {
+    baseId: baseMonster.id,
+    partnerId: partnerMonster.id,
+    evolution: pairTrainEvolution(baseMonster, partnerMonster)
+  };
+  clearPairTrainingTimers();
+  els.pairTrainingBaseMonster.setAttribute("style", monsterStyle(baseMonster));
+  els.pairTrainingPartnerMonster.setAttribute("style", monsterStyle(partnerMonster));
+  els.pairTrainingStageLabel.textContent = "マッチ成立！";
+  els.pairTrainingOverlay.hidden = false;
+  pairTrainingDelay(() => {
+    els.pairTrainingStageLabel.textContent = "トレーニング中…";
+    els.pairTrainingOverlay.classList.add("training");
+  }, 850);
+  pairTrainingDelay(() => {
+    els.pairTrainingOverlay.hidden = true;
+    els.pairTrainingOverlay.classList.remove("training");
+    const pending = state.pendingPairResult;
+    if (!pending) return;
+    const currentBase = state.friends.find((monster) => monster.id === pending.baseId);
+    const currentPartner = state.friends.find((monster) => monster.id === pending.partnerId);
+    if (!currentBase || !currentPartner) return;
+    if (pending.evolution) {
+      const target = monsterSpecies.find((species) => species.no === pending.evolution.resultSpecies);
+      els.pairEvolutionTitle.textContent = `${target?.name ?? "新しい姿"}へ進化できます`;
+      els.pairEvolutionTarget.innerHTML = target
+        ? `<strong>${currentBase.name}</strong><span>→</span><strong>${target.name}</strong>`
+        : "";
+      els.pairEvolutionDialog.showModal();
+    } else {
+      finishPairTraining(false);
+    }
+  }, 1900);
+}
+
+function createPairTrainingResult(baseMonster, partnerMonster, evolve) {
+  const recipe = state.pendingPairResult?.evolution;
+  const trainingBonus = calculateTrainingBonus(baseMonster, partnerMonster);
+  const talent = combinedTalent(baseMonster, partnerMonster);
+  const inheritedIv = { ...baseMonster.iv };
+  let result;
+  if (evolve && recipe) {
+    result = createMonster(0, recipe.resultSpecies, 1, { iv: inheritedIv, talent });
+    result.id = baseMonster.id;
+    result.acquiredOrder = baseMonster.acquiredOrder;
+  } else {
+    result = {
+      ...baseMonster,
+      leftMoves: [...(baseMonster.leftMoves ?? [])],
+      iv: { ...baseMonster.iv },
+      baseStats: { ...baseMonster.baseStats },
+      trainingBonus: { ...baseMonster.trainingBonus }
+    };
+  }
+  result.level = 1;
+  result.experience = 0;
+  result.talent = talent;
+  result.iv = inheritedIv;
+  result.baseStats = speciesBaseStats(result.speciesNo, result.rank.name);
+  result.trainingBonus = trainingBonus;
+  applyCalculatedStats(result);
+  result.nextLevelExperience = nextLevelExperience(result);
+  return result;
+}
+
+function removeMonsterReferences(monsterId) {
+  state.partyPresets = state.partyPresets.map((preset) => (
+    preset.map((id) => id === monsterId ? null : id)
+  ));
+  state.profileMonsterIds = state.profileMonsterIds.map((id) => (
+    id === monsterId ? null : id
+  )).filter(Boolean);
+  state.editingProfileMonsterIds = state.editingProfileMonsterIds.map((id) => (
+    id === monsterId ? null : id
+  )).filter(Boolean);
+  state.partyIds = [...state.partyPresets[state.activePresetIndex]];
+}
+
+function finishPairTraining(evolve) {
+  const pending = state.pendingPairResult;
+  if (!pending) return;
+  if (els.pairEvolutionDialog.open) els.pairEvolutionDialog.close();
+  const baseIndex = state.friends.findIndex((monster) => monster.id === pending.baseId);
+  const baseMonster = state.friends[baseIndex];
+  const partnerMonster = state.friends.find((monster) => monster.id === pending.partnerId);
+  if (baseIndex < 0 || !baseMonster || !partnerMonster) {
+    state.pendingPairResult = null;
+    renderPairTraining();
+    return;
+  }
+  const result = createPairTrainingResult(baseMonster, partnerMonster, evolve);
+  const ordinary = createMonster(0, result.speciesNo, 1, { fixedIv: 0, talent: 0 });
+  state.friends[baseIndex] = result;
+  state.friends = state.friends.filter((monster) => monster.id !== partnerMonster.id);
+  removeMonsterReferences(partnerMonster.id);
+  state.discoveredSpecies.add(result.speciesNo);
+  state.pendingPairResult = null;
+  state.pairBaseId = result.id;
+  state.pairPartnerId = null;
+
+  const statRows = [
+    ["HP", result.hp, result.hp - ordinary.hp],
+    ["パワー", result.power, result.power - ordinary.power],
+    ["スター", result.star, result.star - ordinary.star],
+    ["才能", result.talent, result.talent]
+  ];
+  els.pairResultMonster.innerHTML = `
+    <span class="mini-monster" style="${monsterStyle(result)}"></span>
+    <span><small>Lv 1</small><strong>${result.name}</strong><b>SP ${result.sp}</b></span>`;
+  els.pairResultStats.innerHTML = statRows.map(([label, value, delta]) => `
+    <span><small>${label}</small><strong>${value}</strong><em>${delta >= 0 ? "+" : ""}${delta}</em></span>
+  `).join("");
+  els.pairResultGoodbye.textContent = `${partnerMonster.name}は満足して去っていった…`;
+  renderParty();
+  renderPairTraining();
+  scheduleAutosave();
+  els.pairResultDialog.showModal();
+}
+
 function setHomeTab(tab) {
-  if (tab === "training" && state.playerLevel < 6) return;
+  if (tab === "training" && state.playerLevel < 5) return;
   if (tab !== "match" && !els.outgoingMatchView.hidden) {
     closeOutgoingMatch();
   }
@@ -1701,6 +2231,7 @@ function renderHomeTab() {
   els.matchTabButton.classList.toggle("active", match);
   els.shopTabButton.classList.toggle("active", shop);
   renderDungeonLists();
+  if (training) renderPairTraining();
 }
 
 function isDungeonUnlocked(dungeon) {
@@ -1767,6 +2298,17 @@ function buyCage() {
   updateResources();
 }
 
+function buyCageF() {
+  if (state.gold < CAGE_F_PRICE) {
+    els.shopFeedback.textContent = "Goldが足りません";
+    return;
+  }
+  state.gold -= CAGE_F_PRICE;
+  state.cagesF += 1;
+  els.shopFeedback.textContent = "モンスターケージFを1個購入しました";
+  updateResources();
+}
+
 function buyExpDrink() {
   if (state.gold < EXP_DRINK_PRICE) {
     els.shopFeedback.textContent = "ゴールドが足りません。";
@@ -1780,55 +2322,35 @@ function buyExpDrink() {
 
 function openExpDrinkDialog() {
   if (state.expDrinks <= 0 || state.friends.length === 0) return;
-  els.expDrinkRoster.innerHTML = state.friends.map((monster) => (
-    monsterListCardMarkup(monster, "drink-target")
-  )).join("");
+  els.expDrinkFeedback.hidden = true;
+  renderExpDrinkDialog();
   els.expDrinkDialog.showModal();
 }
 
-function showDrinkExperienceReward(monster) {
-  const reward = grantExperience(monster, EXP_DRINK_AMOUNT);
-  els.experienceTitle.textContent = `${monster.name}にドリンク使用`;
-  els.experienceAmount.textContent = `+${EXP_DRINK_AMOUNT} EXP`;
-  const result = reward.leveledUp
-    ? `<div class="level-up-result">
-        <div class="level-up-banner">
-          <strong>LEVEL UP!</strong>
-          <div class="level-change"><span>Lv ${reward.before.level}</span><i>→</i><b>Lv ${monster.level}</b></div>
-        </div>
-        <div class="growth-stat"><span>HP</span><strong>+${reward.gains.hp}</strong><small>${reward.before.hp} → ${monster.hp}</small></div>
-        <div class="growth-stat"><span>パワー</span><strong>+${reward.gains.power}</strong><small>${reward.before.power} → ${monster.power}</small></div>
-        <div class="growth-stat"><span>スター</span><strong>+${reward.gains.star}</strong><small>${reward.before.star} → ${monster.star}</small></div>
-      </div>`
-    : `<div class="experience-progress">
-        <strong>Lv ${monster.level}</strong>
-        <span>${monster.experience} / ${monster.nextLevelExperience} EXP</span>
-      </div>`;
-  els.experienceList.innerHTML = `
-    <div class="experience-row${reward.leveledUp ? " leveled-up" : ""}">
-      <div class="reward-monster-head">
-        <div class="mini-monster" style="${monsterStyle(monster)}"></div>
-        <strong>${monster.name}</strong>
-        <span class="reward-exp">+${EXP_DRINK_AMOUNT} EXP</span>
-      </div>
-      <div class="experience-monster-copy">${result}</div>
-    </div>`;
-  state.experienceContinue = () => {
-    renderParty();
-    setHomeTab("shop");
-  };
-  els.experienceOverlay.hidden = false;
-  renderParty();
+function renderExpDrinkDialog() {
+  els.expDrinkDialogStatus.textContent = `経験値500ドリンク 所持数 ${state.expDrinks}`;
+  els.expDrinkRoster.innerHTML = state.friends.map((monster) => (
+    monsterListCardMarkup(monster, "drink-target")
+  )).join("");
+  els.expDrinkRoster.querySelectorAll("[data-drink-target]").forEach((button) => {
+    button.disabled = state.expDrinks <= 0;
+  });
 }
 
 function useExpDrinkOnMonster(monsterId) {
   if (state.expDrinks <= 0) return;
   const monster = state.friends.find((friend) => friend.id === monsterId);
   if (!monster) return;
+  const reward = grantExperience(monster, EXP_DRINK_AMOUNT);
   state.expDrinks -= 1;
-  els.expDrinkDialog.close();
   updateResources();
-  showDrinkExperienceReward(monster);
+  renderParty();
+  renderExpDrinkDialog();
+  els.expDrinkFeedback.hidden = false;
+  els.expDrinkFeedback.classList.toggle("level-up", reward.leveledUp);
+  els.expDrinkFeedback.textContent = reward.leveledUp
+    ? `${monster.name}　Lv ${reward.before.level} → Lv ${monster.level}！ HP +${reward.gains.hp} / パワー +${reward.gains.power} / スター +${reward.gains.star}`
+    : `${monster.name}に${EXP_DRINK_AMOUNT} EXP（${monster.experience} / ${monster.nextLevelExperience}）`;
 }
 
 function renderProfileEditor() {
@@ -1964,6 +2486,9 @@ function makeFighter(monster, enemy = false, boss = false) {
     rollUses: 0,
     firstDamageTaken: false,
     endured: false,
+    traitOverride: null,
+    escaped: false,
+    escapeChecked: false,
     enemy,
     boss
   };
@@ -2008,8 +2533,11 @@ function calculateDamage(attacker, defender, moveMultiplier = 1, moveAttribute =
   const critical = Math.random() < chance;
   const criticalMultiplier = critical ? DAMAGE_CONFIG.criticalMultiplier : 1;
   const effectiveness = typeEffectiveness(moveAttribute, defender.monster.attr.name);
+  const chargeMultiplier = attacker.nextAttackMultiplier ?? 1;
+  attacker.nextAttackMultiplier = 1;
   const damage = Math.max(1, Math.round(
-    effectivePower(attacker) * moveMultiplier * randomMultiplier * criticalMultiplier * effectiveness
+    effectivePower(attacker) * moveMultiplier * chargeMultiplier
+      * randomMultiplier * criticalMultiplier * effectiveness
   ));
   return { damage, critical, criticalRate: chance, randomMultiplier, effectiveness };
 }
@@ -2026,11 +2554,22 @@ function moveKey(moveName) {
     "光合成": "grow",
     "溶ける": "cling",
     "ダーク": "bite",
-    "ライト": "flash"
+    "ライト": "flash",
+    "毒の牙": "poisonFang",
+    "火炎ハンマー": "fireHammer",
+    "キラキラさせ機": "glitterMachine",
+    "電気ショック": "electricShock",
+    "舐める": "lick",
+    "闇討ち": "ambush",
+    "ためる": "charge",
+    "癒しの水": "healingWater",
+    "毒の息": "poisonBreath",
+    "スライムプレス": "slimePress"
   }[moveName] ?? "attack";
 }
 
 function traitKey(fighter) {
+  const traitName = fighter.traitOverride ?? fighter.monster.trait;
   return {
     "名称未設定": fighter.monster.speciesNo === 4 ? "firstGuard" : "dodge",
     "焼きたがり": "burnHunter",
@@ -2039,8 +2578,18 @@ function traitKey(fighter) {
     "根気": "grit",
     "ぷるぷる": "jelly",
     "怨念": "grudge",
-    "発光": "dodge"
-  }[fighter.monster.trait] ?? "none";
+    "発光": "dodge",
+    "隠れる": "dodge",
+    "泡": "firstGuard",
+    "加速": "accelerate",
+    "ぬめぬめ": "slimy",
+    "霧隠れ": "mistDodge",
+    "頑丈": "sturdy",
+    "幸運": "lucky",
+    "アンデッド": "undead",
+    "王の威厳": "royal",
+    "ゾンビ": "zombie"
+  }[traitName] ?? "none";
 }
 
 function changeStage(fighter, stat, amount) {
@@ -2126,13 +2675,30 @@ function resetBattleEffects() {
     fighter.rollUses = 0;
     fighter.firstDamageTaken = false;
     fighter.endured = false;
+    fighter.traitOverride = null;
+    fighter.nextAttackMultiplier = 1;
   });
 }
 
 function triggerEntryTrait(fighter, opponents) {
-  if (!fighter || traitKey(fighter) !== "sweet") return;
-  appendBattleLog(`${fighterLogName(fighter)}の特性「甘々」が発動`, "trait");
-  living(opponents).forEach((opponent) => changeStage(opponent, "power", -1));
+  if (!fighter) return;
+  const key = traitKey(fighter);
+  if (key === "sweet") {
+    appendBattleLog(`${fighterLogName(fighter)}の特性「甘々」が発動`, "trait");
+    living(opponents).forEach((opponent) => changeStage(opponent, "power", -1));
+  }
+  if (key === "slimy") {
+    appendBattleLog(`${fighterLogName(fighter)}の特性「ぬめぬめ」が発動`, "trait");
+    living(opponents).forEach((opponent) => changeStage(opponent, "star", -1));
+  }
+  if (key === "lucky") {
+    const gaugeKey = gaugeKeyForFighter(
+      fighter,
+      state.battleIndex < rushBattleCount()
+    );
+    state[gaugeKey] = Math.min(MAX_BATTLE_GAUGE, state[gaugeKey] + 3);
+    appendBattleLog(`${fighterLogName(fighter)}の特性「幸運」でGが3増えた`, "trait");
+  }
 }
 
 function applyBattleEntryTraits(mode) {
@@ -2171,7 +2737,13 @@ function moveMissed(attacker) {
 }
 
 function applyDamageDefenses(attacker, defender, result) {
-  if (traitKey(defender) === "dodge" && Math.random() < 0.1) {
+  const defenderTrait = traitKey(defender);
+  const dodgeRate = defenderTrait === "mistDodge"
+    ? 0.25
+    : defenderTrait === "dodge"
+      ? 0.1
+      : 0;
+  if (dodgeRate && Math.random() < dodgeRate) {
     return { ...result, damage: 0, avoided: "回避" };
   }
   let damage = result.damage;
@@ -2188,6 +2760,9 @@ function applyDamageDefenses(attacker, defender, result) {
   if (traitKey(attacker) === "burnHunter" && defender.statuses.burn) {
     damage *= 2;
   }
+  if (defenderTrait === "sturdy") {
+    damage = Math.max(1, damage - 10);
+  }
   damage *= stageMultiplier("damage", defender.damageStage);
   return { ...result, damage: Math.max(1, Math.round(damage)) };
 }
@@ -2203,11 +2778,18 @@ function inflictDamage(attacker, defender, result) {
   defender.hp = Math.max(0, defender.hp - defended.damage);
   if (wasAlive && defended.damage > 0) {
     gainGaugeAfterDamage(defender);
+    if (traitKey(defender) === "zombie") {
+      attacker.traitOverride = "ゾンビ";
+      appendBattleLog(`${fighterLogName(attacker)}の特性が「ゾンビ」になった`, "status");
+    }
   }
   if (
     wasAlive
     && defender.hp <= 0
-    && traitKey(defender) === "grit"
+    && (
+      (traitKey(defender) === "grit" && !defender.endured)
+      || (traitKey(defender) === "undead" && !defender.endured && Math.random() < 0.3)
+    )
     && !defender.endured
   ) {
     defender.hp = 1;
@@ -2239,6 +2821,35 @@ function applyMoveEffects(attacker, target, move, result, rush = false) {
     const gaugeKey = gaugeKeyForFighter(target, rush);
     state[gaugeKey] = Math.min(MAX_BATTLE_GAUGE, state[gaugeKey] + 1);
     appendBattleLog(`${fighterLogName(target)}のゲージが1増えた`, "status gauge");
+  }
+  if (key === "poisonFang" && Math.random() < 0.5) addStatus(target, "poison");
+  if (key === "fireHammer") changeStage(attacker, "star", 1);
+  if (key === "glitterMachine") {
+    const party = state.allies.includes(attacker) ? state.allies : state.enemies;
+    living(party).forEach((fighter) => changeStage(fighter, "star", 2));
+  }
+  if (key === "electricShock" && Math.random() < 0.2) addStatus(target, "paralysis");
+  if (key === "lick" && Math.random() < 0.5) addStatus(target, "blind");
+  if (key === "ambush") {
+    const gaugeKey = gaugeKeyForFighter(target, rush);
+    state[gaugeKey] = Math.max(0, state[gaugeKey] - 1);
+  }
+  if (key === "charge") attacker.nextAttackMultiplier = 3;
+  if (key === "healingWater") {
+    const party = state.allies.includes(attacker) ? state.allies : state.enemies;
+    living(party).forEach((fighter) => {
+      fighter.statuses = {};
+      healFighter(fighter, fighter.maxHp / 4, "「癒しの水」");
+    });
+  }
+  if (key === "poisonBreath" && Math.random() < 0.5) addStatus(target, "poison");
+  if (key === "slimePress") changeStage(target, "damage", 1);
+  if (!result.nonDamage && !result.missed && traitKey(attacker) === "accelerate") {
+    const gaugeKey = gaugeKeyForFighter(attacker, rush);
+    state[gaugeKey] = Math.min(MAX_BATTLE_GAUGE, state[gaugeKey] + 1);
+  }
+  if (!result.nonDamage && !result.missed && traitKey(attacker) === "royal" && Math.random() < 0.25) {
+    addStatus(target, "flinch");
   }
 }
 
@@ -2323,9 +2934,9 @@ function startDungeon() {
   startBattleRound();
 }
 
-function configuredEnemy(speciesNo, level, hpMultiplier = 1, boss = false) {
+function configuredEnemy(speciesNo, level, hpMultiplier = 1, boss = false, options = {}) {
   state.discoveredSpecies.add(speciesNo);
-  const monster = createMonster(0, speciesNo, level, { fixedIv: 0 });
+  const monster = createMonster(0, speciesNo, level, options);
   if (boss) monster.name = `ヌシ・${monster.name}`;
   const fighter = makeFighter(monster, true, boss);
   fighter.maxHp = Math.max(1, Math.round(fighter.maxHp * hpMultiplier));
@@ -2439,7 +3050,16 @@ function startBattleRound() {
     bossConfig.species,
     bossConfig.level,
     bossConfig.hpMultiplier,
-    true
+    true,
+    {
+      iv: bossConfig.iv ?? dungeon.enemyIv,
+      ivRange: bossConfig.ivRange ?? dungeon.enemyIvRange,
+      ...(!(bossConfig.iv ?? dungeon.enemyIv)
+        && !(bossConfig.ivRange ?? dungeon.enemyIvRange)
+        ? { fixedIv: 0 }
+        : {}),
+      talent: bossConfig.talent ?? 0
+    }
   ));
   state.defeatedBosses = [];
   state.enemies = [state.bossQueue.shift()];
@@ -2490,7 +3110,7 @@ function resetBossBattleVisualState() {
 }
 
 function living(fighters) {
-  return fighters.filter((fighter) => fighter.hp > 0);
+  return fighters.filter((fighter) => fighter.hp > 0 && !fighter.escaped);
 }
 
 function startRushBattle() {
@@ -2501,11 +3121,20 @@ function startRushBattle() {
       { length: rushConfig.count },
       () => pick(rushConfig.speciesPool)
     );
-  state.enemies = speciesNumbers.map((speciesNo) => configuredEnemy(
+  state.enemies = speciesNumbers.map((speciesNo, index) => configuredEnemy(
     speciesNo,
-    rushConfig.level,
+    rushConfig.levels?.[index] ?? rushConfig.level,
     rushConfig.hpMultiplier,
-    false
+    false,
+    {
+      iv: rushConfig.iv ?? dungeon.enemyIv,
+      ivRange: rushConfig.ivRange ?? dungeon.enemyIvRange,
+      ...(!(rushConfig.iv ?? dungeon.enemyIv)
+        && !(rushConfig.ivRange ?? dungeon.enemyIvRange)
+        ? { fixedIv: 0 }
+        : {}),
+      talent: rushConfig.talents?.[index] ?? rushConfig.talent ?? 0
+    }
   ));
   state.allies.forEach((fighter) => {
     fighter.hp = Math.min(fighter.maxHp, fighter.hp + Math.round(fighter.maxHp * 0.32));
@@ -2543,6 +3172,22 @@ function rushBattleTick() {
   const attacker = pick(attackers);
   const target = pick(targets);
   const attackingSide = state.rushSide;
+  if (
+    attackingSide === "enemy"
+    && attacker.monster.escapeChance > 0
+    && !attacker.escapeChecked
+  ) {
+    attacker.escapeChecked = true;
+    if (Math.random() < attacker.monster.escapeChance) {
+      attacker.escaped = true;
+      appendBattleLog(`${fighterLogName(attacker)}は逃げ出した`, "status");
+      showBattleStatusEffect(attacker, "逃走", "dodge");
+      state.rushSide = "ally";
+      renderRushHp();
+      resolveRushBattle();
+      return;
+    }
+  }
   if (actionBlocked(attacker)) {
     finishFighterAction(attacker);
     state.rushSide = state.rushSide === "ally" ? "enemy" : "ally";
@@ -2552,13 +3197,13 @@ function rushBattleTick() {
   }
   const move = chooseRushMove(attacker, attackingSide);
   const key = moveKey(move.name);
-  const nonDamageMove = ["shine", "grow", "cling"].includes(key);
+  const nonDamageMove = ["shine", "grow", "cling", "glitterMachine", "charge", "healingWater"].includes(key);
   const missed = !nonDamageMove && moveMissed(attacker);
   const result = missed
     ? { damage: 0, critical: false, effectiveness: 1, missed: true }
     : calculateDamage(attacker, target, move.multiplier, move.attribute);
   animateRushAttack(attacker, target, state.rushSide, () => {
-    const affectedTargets = key === "flash" ? [...targets] : [target];
+    const affectedTargets = ["flash", "poisonBreath"].includes(key) ? [...targets] : [target];
     const knockedOutTargets = [];
     let primaryResult = result;
     affectedTargets.forEach((affectedTarget) => {
@@ -2625,7 +3270,48 @@ function showRushDamage(target, result) {
   popup.className = `rush-damage-number${result.critical ? " critical" : ""}`;
   popup.textContent = `-${result.damage}`;
   fighterElement.appendChild(popup);
-  battleTimeout(() => popup.remove(), 420, "rush");
+  if (result.critical) {
+    showCriticalImpact(fighterElement, targetElement);
+    window.setTimeout(() => popup.remove(), 950);
+  } else {
+    battleTimeout(() => popup.remove(), 800, "rush");
+  }
+}
+
+function showCriticalImpact(anchor, targetElement) {
+  if (!anchor) return;
+  anchor.classList.remove("critical-impact");
+  targetElement?.classList.remove("critical-hit");
+  void anchor.offsetWidth;
+  anchor.classList.add("critical-impact");
+  targetElement?.classList.add("critical-hit");
+  const label = document.createElement("span");
+  label.className = "critical-impact-label";
+  label.textContent = "CRITICAL!";
+  anchor.appendChild(label);
+  window.setTimeout(() => {
+    label.remove();
+    anchor.classList.remove("critical-impact");
+    targetElement?.classList.remove("critical-hit");
+  }, 900);
+}
+
+function showBossDamage(target, result) {
+  if (result.damage <= 0) return;
+  const isAlly = state.allies.some((fighter) => fighter.id === target.id);
+  const targetElement = isAlly ? els.allyMonster : els.enemyMonster;
+  const anchor = targetElement?.closest(".combatant") ?? els.manualBattleField;
+  if (!anchor) return;
+  const popup = document.createElement("span");
+  popup.className = `boss-damage-number${result.critical ? " critical" : ""}`;
+  popup.textContent = `-${result.damage}`;
+  anchor.appendChild(popup);
+  if (result.critical) {
+    showCriticalImpact(anchor, targetElement);
+    window.setTimeout(() => popup.remove(), 1100);
+  } else {
+    battleTimeout(() => popup.remove(), 900, "boss");
+  }
 }
 
 function resolveRushBattle() {
@@ -2734,14 +3420,7 @@ function renderBattle() {
   );
   applyBattleMonsterStyle(els.enemyMonster, enemy.monster);
   applyBattleMonsterStyle(els.allyMonster, ally.monster);
-  const leftMoveReady = !ally.statuses.paralysis
-    && state.allyPartyGauge >= ally.monster.leftMoveGauge;
-  els.leftMoveGuide.parentElement.classList.toggle("move-ready", leftMoveReady);
-  els.leftMoveGuide.parentElement.classList.toggle("move-disabled", Boolean(ally.statuses.paralysis));
-  els.leftMoveButton.disabled = Boolean(ally.statuses.paralysis);
-  els.rightMoveButton.disabled = false;
-  els.leftMoveCallout.classList.toggle("move-ready", leftMoveReady);
-  els.leftMoveCallout.classList.toggle("move-disabled", Boolean(ally.statuses.paralysis));
+  updateBossMoveAvailability();
   renderBench();
   renderBattleHp();
 }
@@ -2758,8 +3437,26 @@ function renderBattleHp() {
   setHpBar(els.enemyHp, enemy);
   setBattleGauge(els.allyGauge, els.allyGaugeValue, state.allyPartyGauge);
   setBattleGauge(els.enemyGauge, els.enemyGaugeValue, state.enemyPartyGauge);
+  updateBossMoveAvailability();
   renderBench();
   renderBattleStatuses();
+}
+
+function updateBossMoveAvailability() {
+  const ally = state.allies[state.activeAllyIndex];
+  if (!ally || !els.leftMoveButton) return;
+  const gaugeCost = Math.max(0, Number(ally.monster.leftMoveGauge) || 0);
+  const paralyzed = Boolean(ally.statuses.paralysis);
+  const leftMoveReady = !state.battleLocked
+    && !state.awaitingReplacement
+    && !paralyzed
+    && state.allyPartyGauge >= gaugeCost;
+  els.leftMoveButton.classList.toggle("move-ready", leftMoveReady);
+  els.leftMoveButton.classList.toggle("move-disabled", paralyzed);
+  els.leftMoveButton.disabled = paralyzed;
+  els.rightMoveButton.disabled = false;
+  els.leftMoveCallout.classList.toggle("move-ready", leftMoveReady);
+  els.leftMoveCallout.classList.toggle("move-disabled", paralyzed);
 }
 
 function setBattleGauge(fill, label, value) {
@@ -2839,7 +3536,7 @@ function showEffectiveness(target, result, mode) {
     popup.className = `effectiveness-popup ${result.effectiveness > 1 ? "strong" : "weak"}`;
     popup.textContent = text;
     fighter.appendChild(popup);
-    battleTimeout(() => popup.remove(), 720, "rush");
+    battleTimeout(() => popup.remove(), 1300, "rush");
     return;
   }
   els.bossEffectText.hidden = false;
@@ -2848,7 +3545,7 @@ function showEffectiveness(target, result, mode) {
   window.clearTimeout(state.effectivenessTimer);
   state.effectivenessTimer = battleTimeout(() => {
     els.bossEffectText.hidden = true;
-  }, 850, "boss");
+  }, 1450, "boss");
 }
 
 function fighterStatusMarkup(fighter) {
@@ -3151,8 +3848,8 @@ function useMove(direction) {
     state.allyPartyGauge -= gaugeCost;
     onGaugeSpent(ally);
   }
-  renderBench();
-  const nonDamageMove = ["shine", "grow", "cling"].includes(key);
+  renderBattleHp();
+  const nonDamageMove = ["shine", "grow", "cling", "glitterMachine", "charge", "healingWater"].includes(key);
   const missed = !nonDamageMove && moveMissed(ally);
   const result = missed
     ? { damage: 0, critical: false, effectiveness: 1, missed: true }
@@ -3167,6 +3864,7 @@ function useMove(direction) {
         : inflictDamage(ally, enemy, result);
       if (!nonDamageMove && !missed) {
         animateBossMonster(els.enemyMonster, "boss-hit");
+        showBossDamage(enemy, finalResult);
         showEffectiveness(enemy, finalResult, "boss");
       }
       applyMoveEffects(
@@ -3218,6 +3916,7 @@ function enemyTurn() {
       return;
     }
     state.battleLocked = false;
+    renderBattleHp();
     setBattleMessage("相手は怯んで動けなかった。あなたのターン");
     return;
   }
@@ -3245,7 +3944,7 @@ function enemyTurn() {
   }
   const key = moveKey(move.name);
   if (key === "roll") move.multiplier += enemy.rollUses * 0.1;
-  const nonDamageMove = ["shine", "grow", "cling"].includes(key);
+  const nonDamageMove = ["shine", "grow", "cling", "glitterMachine", "charge", "healingWater"].includes(key);
   const missed = !nonDamageMove && moveMissed(enemy);
   const result = missed
     ? { damage: 0, critical: false, effectiveness: 1, missed: true }
@@ -3259,6 +3958,7 @@ function enemyTurn() {
       : inflictDamage(enemy, ally, result);
     if (!nonDamageMove && !missed) {
       animateBossMonster(els.allyMonster, "boss-hit");
+      showBossDamage(ally, finalResult);
       showEffectiveness(ally, finalResult, "boss");
     }
     applyMoveEffects(
@@ -3297,7 +3997,7 @@ function enemyTurn() {
     } else {
       battleTimeout(() => {
         state.battleLocked = false;
-        renderBench();
+        renderBattleHp();
         setBattleMessage("あなたのターン");
       }, 520, "boss");
     }
@@ -3402,8 +4102,13 @@ function createDungeonMatchRequest(dungeon) {
   const monster = createMonster(
     0,
     selectedMonster.species,
-    selectedMonster.level,
-    selectedMonster.rank ? { rankName: selectedMonster.rank } : {}
+    Array.isArray(selectedMonster.level)
+      ? randomInt(selectedMonster.level[0], selectedMonster.level[1])
+      : selectedMonster.level,
+    {
+      ...(selectedMonster.rank ? { rankName: selectedMonster.rank } : {}),
+      ...(selectedMonster.talent ? { talent: selectedMonster.talent } : {})
+    }
   );
   monster.requestTable = selectedTable.name;
   monster.requestDungeon = dungeon.name;
@@ -3726,6 +4431,7 @@ function renderCurrentRequest() {
   els.attribute.style.setProperty("--attr-color", monster.attr.color);
   state.requestLocked = false;
   resetCard();
+  updateResources();
   els.card.classList.remove("enter");
   requestAnimationFrame(() => els.card.classList.add("enter"));
 }
@@ -3758,7 +4464,8 @@ function decideRequest(keep) {
     snapCardBack();
     return;
   }
-  if (keep && state.cages <= 0) {
+  const cageType = keep ? preferredCageType(monster) : null;
+  if (keep && !cageType) {
     snapCardBack();
     els.matchCageStatus.classList.remove("notice");
     void els.matchCageStatus.offsetWidth;
@@ -3767,6 +4474,7 @@ function decideRequest(keep) {
   }
   if (keep && state.friends.length >= MAX_FRIENDS) {
     state.pendingRecruit = monster;
+    state.pendingRecruitCageType = cageType;
     snapCardBack();
     openReplaceDialog();
     return;
@@ -3775,7 +4483,7 @@ function decideRequest(keep) {
   animateCardOut(keep);
   if (keep) {
     addFriendDirect(monster);
-    state.cages -= 1;
+    consumeCage(cageType);
     if (state.tutorialStage === "recruiting") {
       state.tutorialMatchedCount += 1;
     }
@@ -3915,11 +4623,12 @@ function replaceFriend(id) {
   state.friendSequence += 1;
   matchedMonster.acquiredOrder = state.friendSequence;
   state.friends[index] = matchedMonster;
-  state.cages -= 1;
+  consumeCage(state.pendingRecruitCageType);
   state.partyPresets = state.partyPresets.map((preset) => preset.map((monsterId) => monsterId === id ? null : monsterId));
   state.profileMonsterIds = state.profileMonsterIds.map((monsterId) => monsterId === id ? null : monsterId);
   state.partyIds = [...state.partyPresets[state.activePresetIndex]];
   state.pendingRecruit = null;
+  state.pendingRecruitCageType = null;
   els.replaceDialog.close();
   state.requestLocked = true;
   animateCardOut(true);
@@ -4045,6 +4754,24 @@ function bindEvents() {
   els.trainingTabButton.addEventListener("click", () => setHomeTab("training"));
   els.matchTabButton.addEventListener("click", () => setHomeTab("match"));
   els.shopTabButton.addEventListener("click", () => setHomeTab("shop"));
+  els.pairBaseSlot.addEventListener("click", () => openPairPicker("base"));
+  els.pairPartnerSlot.addEventListener("click", () => openPairPicker("partner"));
+  els.pairTrainingStart.addEventListener("click", startPairTraining);
+  els.closePairPicker.addEventListener("click", () => els.pairPickerDialog.close());
+  els.pairPickerDialog.addEventListener("click", (event) => {
+    if (clickedDialogBackdrop(event, els.pairPickerDialog)) {
+      els.pairPickerDialog.close();
+      return;
+    }
+    const button = event.target.closest("[data-pair-monster-id]");
+    if (button && !button.disabled) selectPairMonster(button.dataset.pairMonsterId);
+  });
+  els.declinePairEvolution.addEventListener("click", () => finishPairTraining(false));
+  els.acceptPairEvolution.addEventListener("click", () => finishPairTraining(true));
+  els.closePairResult.addEventListener("click", () => els.pairResultDialog.close());
+  els.pairResultDialog.addEventListener("click", (event) => {
+    if (clickedDialogBackdrop(event, els.pairResultDialog)) els.pairResultDialog.close();
+  });
   els.dungeonCategoryTabs.addEventListener("click", (event) => {
     const button = event.target.closest("[data-dungeon-category]");
     if (!button) return;
@@ -4053,6 +4780,7 @@ function bindEvents() {
     scheduleAutosave();
   });
   els.buyCageButton.addEventListener("click", buyCage);
+  els.buyCageFButton.addEventListener("click", buyCageF);
   els.buyExpDrinkButton.addEventListener("click", buyExpDrink);
   els.useExpDrinkButton.addEventListener("click", openExpDrinkDialog);
   els.closeExpDrinkDialog.addEventListener("click", () => els.expDrinkDialog.close());
@@ -4169,11 +4897,28 @@ function bindEvents() {
   });
   els.closeCageSelect.addEventListener("click", () => {
     state.pendingOutgoingMonsterId = null;
+    state.selectedOutgoingCageType = null;
     els.cageSelectDialog.close();
+  });
+  [els.standardCageChoice, els.fCageChoice].forEach((choice) => {
+    choice.addEventListener("click", () => {
+      if (choice.disabled) return;
+      state.selectedOutgoingCageType = choice.dataset.cageType;
+      els.standardCageChoice.classList.toggle(
+        "selected",
+        state.selectedOutgoingCageType === "G"
+      );
+      els.fCageChoice.classList.toggle(
+        "selected",
+        state.selectedOutgoingCageType === "F"
+      );
+      els.confirmOutgoingApplication.disabled = false;
+    });
   });
   els.cageSelectDialog.addEventListener("click", (event) => {
     if (!clickedDialogBackdrop(event, els.cageSelectDialog)) return;
     state.pendingOutgoingMonsterId = null;
+    state.selectedOutgoingCageType = null;
     els.cageSelectDialog.close();
   });
   els.confirmOutgoingApplication.addEventListener("click", applyOutgoingMatch);
@@ -4264,6 +5009,7 @@ function bindEvents() {
   });
   els.cancelReplace.addEventListener("click", () => {
     state.pendingRecruit = null;
+    state.pendingRecruitCageType = null;
     els.replaceDialog.close();
     snapCardBack();
   });

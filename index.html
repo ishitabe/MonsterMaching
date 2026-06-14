@@ -146,16 +146,25 @@
         <div class="home-panel training-home-panel" id="trainingHomePanel" hidden>
           <div class="section-heading">
             <div>
-              <p class="eyebrow">TRAINING</p>
-              <h1>特訓</h1>
+              <p class="eyebrow">PAIR TRAINING</p>
+              <h1>ペアトレ</h1>
             </div>
-            <span class="selection-count">PLAYER Lv 6</span>
+            <span class="selection-count">PLAYER Lv 5</span>
           </div>
-          <div class="training-placeholder">
-            <span class="training-symbol">＋</span>
-            <strong>特訓機能は準備中</strong>
-            <p>2体のモンスターから新しいモンスターを育てる機能を今後追加します。</p>
+          <p class="home-caption">Lv10以上の2体で特訓します。ペア相手は特訓後に去ります。</p>
+          <div class="pair-training-selection">
+            <button class="pair-training-slot" id="pairBaseSlot" type="button">
+              <span class="pair-slot-label">BASE</span>
+              <span class="pair-slot-empty">ベースを選ぶ</span>
+            </button>
+            <span class="pair-training-plus">＋</span>
+            <button class="pair-training-slot" id="pairPartnerSlot" type="button" disabled>
+              <span class="pair-slot-label">PARTNER</span>
+              <span class="pair-slot-empty">相手を選ぶ</span>
+            </button>
           </div>
+          <div class="pair-training-preview" id="pairTrainingPreview" hidden></div>
+          <button class="primary-button pair-training-start" id="pairTrainingStart" type="button" disabled>ペアトレ開始</button>
         </div>
 
         <div class="home-panel shop-home-panel" id="shopHomePanel" hidden>
@@ -170,13 +179,25 @@
           <section class="shop-item">
             <div class="cage-icon" aria-hidden="true"><i></i></div>
             <div class="shop-item-copy">
-              <strong>モンスターケージ</strong>
+              <strong>モンスターケージG</strong>
               <span>所持数 <b id="shopCageCount">3</b></span>
-              <small>仲間にするとき1個消費</small>
+              <small>Gランク以下のモンスターに使用可能</small>
             </div>
             <button class="shop-buy-button" id="buyCageButton" type="button">
               <span>1個購入</span>
               <strong>100 Gold</strong>
+            </button>
+          </section>
+          <section class="shop-item">
+            <div class="cage-icon cage-icon-f" aria-hidden="true"><i></i></div>
+            <div class="shop-item-copy">
+              <strong>モンスターケージF</strong>
+              <span>所持数 <b id="shopCageFCount">0</b></span>
+              <small>Fランク以下のモンスターに使用可能</small>
+            </div>
+            <button class="shop-buy-button cage-f-buy-button" id="buyCageFButton" type="button">
+              <span>1個購入</span>
+              <strong>300 Gold</strong>
             </button>
           </section>
           <section class="shop-item">
@@ -208,8 +229,8 @@
           </button>
           <button class="home-tab locked" id="trainingTabButton" type="button" data-home-tab="training">
             <span class="tab-symbol">＋</span>
-            <span>特訓</span>
-            <i class="tab-lock-label">Lv6</i>
+              <span>ペアトレ</span>
+            <i class="tab-lock-label">Lv5</i>
           </button>
           <button class="home-tab" id="matchTabButton" type="button" data-home-tab="match">
             <span class="tab-symbol">♥</span>
@@ -338,13 +359,13 @@
                 <div class="match-image-identity">
                   <h2 id="name">---</h2>
                   <div class="monster-tags">
-                    <span class="level-badge" id="levelBadge">Lv 1</span>
                     <span class="rank-badge" id="rankBadge">ランク G</span>
                     <span class="attribute" id="attribute">---</span>
                   </div>
                 </div>
               </div>
               <div class="summary-stats">
+                <div class="detail-level-row match-level-row"><span id="levelBadge">Lv 1</span></div>
                 <div class="summary-sp"><span>SP</span><strong id="sp">000</strong></div>
                 <div><span>HP</span><strong id="matchHp">0</strong></div>
                 <div><span>パワー</span><strong id="matchPower">0</strong></div>
@@ -453,7 +474,52 @@
         <button class="close-button" id="closeExpDrinkDialog" type="button" aria-label="閉じる">×</button>
       </div>
       <p class="dialog-copy">選んだモンスターに500経験値を与えます。</p>
+      <p class="exp-drink-dialog-status" id="expDrinkDialogStatus">所持数 0</p>
+      <p class="exp-drink-feedback" id="expDrinkFeedback" hidden></p>
       <div class="roster picker-roster" id="expDrinkRoster"></div>
+    </dialog>
+
+    <dialog class="party-picker-dialog pair-picker-dialog" id="pairPickerDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">PAIR TRAINING</p>
+          <h2 id="pairPickerTitle">ベースを選ぶ</h2>
+        </div>
+        <button class="close-button" id="closePairPicker" type="button" aria-label="閉じる">×</button>
+      </div>
+      <p class="dialog-copy" id="pairPickerCopy">Lv10以上のモンスターを選択してください。</p>
+      <div class="roster picker-roster pair-picker-roster" id="pairPickerRoster"></div>
+    </dialog>
+
+    <dialog class="confirm-dialog pair-evolution-dialog" id="pairEvolutionDialog">
+      <p class="eyebrow">EVOLUTION FOUND</p>
+      <h2 id="pairEvolutionTitle">進化できます</h2>
+      <div class="pair-evolution-target" id="pairEvolutionTarget"></div>
+      <p class="dialog-copy">進化先へ変化させますか？ ステータスはペアトレ結果を引き継ぎます。</p>
+      <div class="confirm-actions">
+        <button class="secondary-button" id="declinePairEvolution" type="button">進化しない</button>
+        <button class="primary-button" id="acceptPairEvolution" type="button">進化する</button>
+      </div>
+    </dialog>
+
+    <div class="pair-training-overlay" id="pairTrainingOverlay" hidden>
+      <div class="pair-training-stage">
+        <div class="pair-training-orbit">
+          <div class="mini-monster" id="pairTrainingBaseMonster"></div>
+          <span>♥</span>
+          <div class="mini-monster" id="pairTrainingPartnerMonster"></div>
+        </div>
+        <p id="pairTrainingStageLabel">マッチ成立！</p>
+      </div>
+    </div>
+
+    <dialog class="pair-result-dialog" id="pairResultDialog">
+      <p class="eyebrow">PAIR TRAINING RESULT</p>
+      <h2>ペアトレ完了！</h2>
+      <div class="pair-result-monster" id="pairResultMonster"></div>
+      <div class="pair-result-stats" id="pairResultStats"></div>
+      <p class="pair-result-goodbye" id="pairResultGoodbye"></p>
+      <button class="primary-button" id="closePairResult" type="button">完了</button>
     </dialog>
 
     <dialog class="profile-dialog" id="profileDialog">
@@ -496,10 +562,15 @@
         <button class="close-button" id="closeCageSelect" type="button" aria-label="閉じる">×</button>
       </div>
       <p class="dialog-copy">マッチ申請にはケージを1個使用します。</p>
-      <button class="cage-choice" id="standardCageChoice" type="button">
+      <button class="cage-choice" id="standardCageChoice" data-cage-type="G" type="button">
         <span class="cage-icon" aria-hidden="true"><i></i></span>
-        <span><strong>モンスターケージ</strong><small>成功率補正 ×1.0</small></span>
+        <span><strong>モンスターケージG</strong><small>Gランク以下に使用可能</small></span>
         <b>所持 <i id="outgoingCageCount">0</i></b>
+      </button>
+      <button class="cage-choice" id="fCageChoice" data-cage-type="F" type="button">
+        <span class="cage-icon cage-icon-f" aria-hidden="true"><i></i></span>
+        <span><strong>モンスターケージF</strong><small>Fランク以下に使用可能</small></span>
+        <b>所持 <i id="outgoingCageFCount">0</i></b>
       </button>
       <button class="primary-button" id="confirmOutgoingApplication" type="button">このケージで申請</button>
     </dialog>
@@ -530,23 +601,21 @@
       <div class="detail-summary">
         <div class="detail-visual" id="detailVisual">
           <div class="monster-art detail-monster" aria-hidden="true"></div>
+          <div class="detail-image-identity">
+            <p class="eyebrow">MONSTER PROFILE</p>
+            <h2 id="detailName">---</h2>
+            <div class="monster-tags">
+              <span class="rank-badge" id="detailRank">ランク G</span>
+              <span class="attribute" id="detailAttribute">---</span>
+            </div>
+          </div>
         </div>
         <div class="summary-stats detail-summary-stats">
+          <div class="detail-level-row"><span id="detailLevel">Lv 1</span></div>
           <div class="summary-sp"><span>SP</span><strong id="detailSp">---</strong></div>
           <div><span>HP</span><strong id="detailHp">---</strong></div>
           <div><span>パワー</span><strong id="detailPower">---</strong></div>
           <div><span>スター</span><strong id="detailStar">---</strong></div>
-        </div>
-      </div>
-      <div class="detail-title">
-        <div>
-          <p class="eyebrow">MONSTER PROFILE</p>
-          <h2 id="detailName">---</h2>
-        </div>
-        <div class="monster-tags">
-          <span class="level-badge" id="detailLevel">Lv 1</span>
-          <span class="rank-badge" id="detailRank">ランク G</span>
-          <span class="attribute" id="detailAttribute">---</span>
         </div>
       </div>
       <div class="detail-stats">
