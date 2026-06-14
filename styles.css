@@ -810,6 +810,14 @@ button {
   font-size: 16px;
 }
 
+.pair-count-warning {
+  margin: 0;
+  color: #8a4c16;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.65;
+}
+
 .pair-training-start {
   width: 100%;
   min-height: 48px;
@@ -2251,6 +2259,224 @@ h2 {
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   margin-top: 16px;
+}
+
+.dungeon-boss-summary {
+  margin-top: 14px;
+  border: 1px solid #e6c7bd;
+  border-radius: 8px;
+  background: #fff7f3;
+  padding: 10px;
+}
+
+.dungeon-boss-summary[hidden] {
+  display: none;
+}
+
+.dungeon-boss-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.dungeon-boss-heading > span {
+  color: #b24b3c;
+  font-size: 10px;
+  font-weight: 1000;
+}
+
+.dungeon-boss-heading button {
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  color: #425b55;
+  padding: 2px 0;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.dungeon-boss-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 6px;
+}
+
+.dungeon-enemy-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid rgba(72, 91, 86, 0.16);
+  border-radius: 7px;
+  background: white;
+  padding: 7px;
+}
+
+.dungeon-boss-list .dungeon-enemy-card {
+  grid-template-columns: 38px minmax(0, 1fr);
+  padding: 6px;
+}
+
+.dungeon-enemy-art {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--list-bg);
+}
+
+.dungeon-boss-list .dungeon-enemy-art {
+  width: 38px;
+  height: 38px;
+}
+
+.dungeon-enemy-art .mini-monster {
+  width: 38px;
+  height: 38px;
+}
+
+.dungeon-boss-list .mini-monster {
+  width: 31px;
+  height: 31px;
+}
+
+.dungeon-enemy-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dungeon-enemy-copy > strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dungeon-enemy-copy > span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dungeon-enemy-copy .level-chip,
+.dungeon-enemy-copy .inline-rank,
+.dungeon-enemy-copy .attribute-chip {
+  padding: 2px 4px;
+  font-size: 8px;
+}
+
+.dungeon-enemy-copy small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.dungeon-detail-dialog {
+  width: min(calc(100vw - 20px), 440px);
+  max-height: 92svh;
+  border: 0;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 24px 70px rgba(23, 33, 43, 0.42);
+}
+
+.dungeon-detail-dialog::backdrop {
+  background: rgba(23, 33, 43, 0.7);
+}
+
+.dungeon-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.dungeon-detail-meta > span {
+  border-radius: 5px;
+  background: #edf5f2;
+  color: #4c605a;
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.dungeon-detail-battles {
+  display: grid;
+  gap: 12px;
+  max-height: calc(92svh - 145px);
+  margin-top: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dungeon-battle-section {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8faf9;
+  padding: 10px;
+}
+
+.dungeon-battle-section.boss {
+  border-color: #e2b8ab;
+  background: #fff7f3;
+}
+
+.dungeon-battle-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 8px;
+}
+
+.dungeon-battle-heading span {
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 1000;
+}
+
+.dungeon-battle-section.boss .dungeon-battle-heading span {
+  color: #b24b3c;
+}
+
+.dungeon-battle-heading strong {
+  font-size: 14px;
+}
+
+.dungeon-enemy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.dungeon-random-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  border-left: 3px solid #7fcdb8;
+  background: #edf8f5;
+  color: #49635c;
+  padding: 7px 9px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+@media (max-width: 390px) {
+  .dungeon-boss-list {
+    grid-template-columns: 1fr;
+  }
+
+  .dungeon-boss-list .dungeon-enemy-card {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .dungeon-enemy-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .preset-tab {

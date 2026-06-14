@@ -151,7 +151,7 @@
             </div>
             <span class="selection-count">PLAYER Lv 5</span>
           </div>
-          <p class="home-caption">Lv10以上の2体で特訓します。ペア相手は特訓後に去ります。</p>
+          <p class="home-caption">Lv10以上の2体で特訓します。編成中でも選択できますが、ペアトレ後は3体以上残す必要があります。</p>
           <div class="pair-training-selection">
             <button class="pair-training-slot" id="pairBaseSlot" type="button">
               <span class="pair-slot-label">BASE</span>
@@ -410,6 +410,13 @@
         </div>
         <button class="close-button" id="closePartyDialog" type="button" aria-label="閉じる">×</button>
       </div>
+      <section class="dungeon-boss-summary" id="dungeonBossSummary">
+        <div class="dungeon-boss-heading">
+          <span>BOSS</span>
+          <button id="openDungeonDetails" type="button">詳細を見る</button>
+        </div>
+        <div class="dungeon-boss-list" id="dungeonBossList"></div>
+      </section>
       <div class="preset-tabs" id="presetTabs">
         <button class="preset-tab active" type="button" data-preset-index="0">PARTY 1</button>
         <button class="preset-tab" type="button" data-preset-index="1">PARTY 2</button>
@@ -423,6 +430,18 @@
       </div>
       <button class="primary-button dive-dialog-button" id="diveButton" type="button" disabled>このパーティで潜る</button>
       <span class="selection-count dialog-party-count" id="partyCount">0 / 3</span>
+    </dialog>
+
+    <dialog class="dungeon-detail-dialog" id="dungeonDetailDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">DUNGEON DETAILS</p>
+          <h2 id="dungeonDetailName">ダンジョン情報</h2>
+        </div>
+        <button class="close-button" id="closeDungeonDetails" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="dungeon-detail-meta" id="dungeonDetailMeta"></div>
+      <div class="dungeon-detail-battles" id="dungeonDetailBattles"></div>
     </dialog>
 
     <dialog class="party-picker-dialog" id="partyPickerDialog">
