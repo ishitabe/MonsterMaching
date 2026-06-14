@@ -97,10 +97,16 @@ const monsterRanks = [
 const MAX_FRIENDS = 100;
 const CAGE_PRICE = 100;
 const CAGE_F_PRICE = 300;
-const EXP_DRINK_PRICE = 200;
-const EXP_DRINK_AMOUNT = 500;
-const OUTGOING_MATCH_REFRESH_MS = 6 * 60 * 60 * 1000;
-const SAVE_VERSION = 4;
+const EXP_DRINK_PRICE = 1500;
+const EXP_DRINK_AMOUNT = 3000;
+const EXP_MIST_PRICE = 700;
+const EXP_MIST_AMOUNT = 500;
+const CATALOG_CHANGE_PRICE = 1000;
+const HEART_PLUS_PRICE = 2000;
+const MAX_CATALOG_HEARTS = 5;
+const CATALOG_HEART_RECOVERY_MS = 30 * 60 * 1000;
+const OUTGOING_MATCH_REFRESH_MS = 3 * 60 * 60 * 1000;
+const SAVE_VERSION = 5;
 const AUTOSAVE_KEY = "monmachi.save.autosave";
 const MANUAL_SAVE_PREFIX = "monmachi.save.slot.";
 const MANUAL_SAVE_SLOT_COUNT = 5;
@@ -486,6 +492,10 @@ const state = {
   cages: 1,
   cagesF: 0,
   expDrinks: 0,
+  expMists: 0,
+  catalogChanges: 0,
+  catalogHearts: MAX_CATALOG_HEARTS,
+  catalogHeartUpdatedAt: Date.now(),
   friends: [],
   friendSequence: 0,
   collectionSort: "newest",
@@ -499,10 +509,10 @@ const state = {
   pairTrainingTimers: [],
   outgoingCandidates: [],
   outgoingGeneratedAt: 0,
-  outgoingApplied: false,
   outgoingTimer: null,
   pendingOutgoingMonsterId: null,
   selectedOutgoingCageType: null,
+  catalogMatchAnimating: false,
   discoveredSpecies: new Set([1, 2, 3, 4, 5, 6]),
   profileMonsterIds: [],
   editingProfileMonsterIds: [],
@@ -597,9 +607,12 @@ function cacheElements() {
     "pairResultStats", "pairResultGoodbye", "closePairResult",
     "dungeonCategoryTabs", "generalDungeonList", "trialDungeonList",
     "monsterTabButton", "dungeonTabButton", "trainingTabButton", "matchTabButton", "shopTabButton",
-    "shopGold", "shopCageCount", "buyCageButton", "shopCageFCount", "buyCageFButton",
+    "shopGold", "shopCageCount", "buyCageButton", "shopCageFItem", "shopCageFCount", "buyCageFButton",
     "shopFeedback",
-    "shopExpDrinkCount", "buyExpDrinkButton", "useExpDrinkButton",
+    "shopExpDrinkItem", "shopExpDrinkCount", "buyExpDrinkButton", "useExpDrinkButton",
+    "shopExpMistItem", "shopExpMistCount", "buyExpMistButton", "useExpMistButton",
+    "shopCatalogChangeCount", "buyCatalogChangeButton", "useCatalogChangeButton",
+    "buyHeartPlusButton",
     "expDrinkDialog", "closeExpDrinkDialog", "expDrinkRoster",
     "expDrinkDialogStatus", "expDrinkFeedback",
     "collectionCount", "collectionGrid", "collectionSort", "collectionAttributeFilter",
@@ -615,6 +628,7 @@ function cacheElements() {
     "matchMenuList", "openProfileButton", "matchProfileName",
     "outgoingMatchButton", "outgoingCountLabel", "outgoingUnlockCopy", "outgoingMatchView",
     "closeOutgoingMatch", "refreshOutgoingMatch", "outgoingRefreshTimer",
+    "catalogHeartDisplay", "catalogHeartTimer",
     "outgoingPlayerName", "unlockedRankLabel", "matchProfileMonsters", "outgoingMatchFeedback",
     "outgoingMonsterList",
     "profileDialog", "closeProfileDialog", "playerNameInput", "profileEditorSlots",
@@ -622,6 +636,7 @@ function cacheElements() {
     "closeProfilePicker", "profilePickerRoster",
     "cageSelectDialog", "closeCageSelect", "standardCageChoice", "fCageChoice",
     "outgoingCageCount", "outgoingCageFCount", "confirmOutgoingApplication",
+    "catalogMatchOverlay", "catalogMatchMonster", "catalogMatchStageTitle", "catalogMatchStageCopy",
     "roster", "diveButton", "battleKind", "battleTitle",
     "battleSpeedButton", "battleSpeedValue",
     "battleDots", "rushBattleArea", "rushEnemyHpList", "rushAllyHpList",
@@ -1106,6 +1121,10 @@ function createSaveData() {
     cages: state.cages,
     cagesF: state.cagesF,
     expDrinks: state.expDrinks,
+    expMists: state.expMists,
+    catalogChanges: state.catalogChanges,
+    catalogHearts: state.catalogHearts,
+    catalogHeartUpdatedAt: state.catalogHeartUpdatedAt,
     friends: state.friends.map(serializeMonster),
     friendSequence: state.friendSequence,
     collectionSort: state.collectionSort,
@@ -1114,7 +1133,6 @@ function createSaveData() {
     partyPickerAttributeFilter: state.partyPickerAttributeFilter,
     outgoingCandidates: state.outgoingCandidates.map(serializeMonster),
     outgoingGeneratedAt: state.outgoingGeneratedAt,
-    outgoingApplied: state.outgoingApplied,
     discoveredSpecies: [...state.discoveredSpecies],
     profileMonsterIds: [...state.profileMonsterIds],
     partyPresets: state.partyPresets.map((preset) => [...preset]),
@@ -1165,6 +1183,12 @@ function migrateSaveData(savedData) {
     migrated.discoveredSpecies = (migrated.discoveredSpecies ?? []).map((speciesNo) => (
       speciesNo === 39 ? 28 : speciesNo
     ));
+  }
+  if (migrated.saveVersion < 5) {
+    migrated.expMists = 0;
+    migrated.catalogChanges = 0;
+    migrated.catalogHearts = MAX_CATALOG_HEARTS;
+    migrated.catalogHeartUpdatedAt = Date.now();
   }
   migrated.saveVersion = SAVE_VERSION;
   return migrated;
@@ -1222,6 +1246,13 @@ function applySaveData(rawSave) {
   state.cages = Math.max(0, Number(saved.cages) || 0);
   state.cagesF = Math.max(0, Number(saved.cagesF) || 0);
   state.expDrinks = Math.max(0, Number(saved.expDrinks) || 0);
+  state.expMists = Math.max(0, Number(saved.expMists) || 0);
+  state.catalogChanges = Math.max(0, Number(saved.catalogChanges) || 0);
+  state.catalogHearts = Math.max(
+    0,
+    Math.min(MAX_CATALOG_HEARTS, Number(saved.catalogHearts) || 0)
+  );
+  state.catalogHeartUpdatedAt = Number(saved.catalogHeartUpdatedAt) || Date.now();
   state.friends = friends;
   state.friendSequence = Math.max(
     Number(saved.friendSequence) || 0,
@@ -1234,7 +1265,6 @@ function applySaveData(rawSave) {
   state.partyPickerAttributeFilter = saved.partyPickerAttributeFilter || "all";
   state.outgoingCandidates = (saved.outgoingCandidates ?? []).map(hydrateMonster).filter(Boolean);
   state.outgoingGeneratedAt = Number(saved.outgoingGeneratedAt) || 0;
-  state.outgoingApplied = Boolean(saved.outgoingApplied);
   state.discoveredSpecies = new Set(saved.discoveredSpecies ?? friends.map((monster) => monster.speciesNo));
   state.profileMonsterIds = (saved.profileMonsterIds ?? []).filter((id) => validIds.has(id)).slice(0, 3);
   state.partyPresets = Array.from({ length: 3 }, (_, index) => (
@@ -1353,6 +1383,10 @@ function startTutorial() {
   state.cages = 1;
   state.cagesF = 0;
   state.expDrinks = 0;
+  state.expMists = 0;
+  state.catalogChanges = 0;
+  state.catalogHearts = MAX_CATALOG_HEARTS;
+  state.catalogHeartUpdatedAt = Date.now();
   state.friends = [];
   state.friendSequence = 0;
   state.partyPresets = [[], [], []];
@@ -1452,6 +1486,10 @@ function skipTutorial() {
   state.cages = 0;
   state.cagesF = 0;
   state.expDrinks = 0;
+  state.expMists = 0;
+  state.catalogChanges = 0;
+  state.catalogHearts = MAX_CATALOG_HEARTS;
+  state.catalogHeartUpdatedAt = Date.now();
   state.friends = [];
   state.friendSequence = 0;
   addFriendDirect(createMonster(0, 1, 3));
@@ -1468,6 +1506,7 @@ function skipTutorial() {
 }
 
 function updateResources() {
+  recoverCatalogHearts();
   els.playerLevel.textContent = state.playerLevel;
   els.headerPlayerName.textContent = state.playerName;
   els.headerPlayerLevel.textContent = state.playerLevel;
@@ -1493,11 +1532,26 @@ function updateResources() {
   els.outgoingCageCount.textContent = state.cages;
   els.outgoingCageFCount.textContent = state.cagesF;
   els.shopExpDrinkCount.textContent = state.expDrinks;
+  els.shopExpMistCount.textContent = state.expMists;
+  els.shopCatalogChangeCount.textContent = state.catalogChanges;
   els.matchCageCount.textContent = `G ${state.cages} / F ${state.cagesF}`;
   els.buyCageButton.disabled = state.gold < CAGE_PRICE;
-  els.buyCageFButton.disabled = state.gold < CAGE_F_PRICE;
-  els.buyExpDrinkButton.disabled = state.gold < EXP_DRINK_PRICE;
+  const cageFUnlocked = state.playerLevel >= 3;
+  const mistUnlocked = state.playerLevel >= 4;
+  const drinkUnlocked = state.playerLevel >= 7;
+  setShopItemLock(els.shopCageFItem, cageFUnlocked, 3);
+  setShopItemLock(els.shopExpMistItem, mistUnlocked, 4);
+  setShopItemLock(els.shopExpDrinkItem, drinkUnlocked, 7);
+  els.buyCageFButton.disabled = !cageFUnlocked || state.gold < CAGE_F_PRICE;
+  els.buyExpDrinkButton.disabled = !drinkUnlocked || state.gold < EXP_DRINK_PRICE;
+  els.buyExpMistButton.disabled = !mistUnlocked || state.gold < EXP_MIST_PRICE;
   els.useExpDrinkButton.disabled = state.expDrinks <= 0 || state.friends.length === 0;
+  els.useExpMistButton.disabled = state.expMists <= 0 || state.friends.length === 0;
+  els.buyCatalogChangeButton.disabled = state.gold < CATALOG_CHANGE_PRICE;
+  els.useCatalogChangeButton.disabled = state.catalogChanges <= 0;
+  els.buyHeartPlusButton.disabled = state.gold < HEART_PLUS_PRICE
+    || state.catalogHearts >= MAX_CATALOG_HEARTS;
+  updateCatalogHeartDisplay();
   const requestMonster = state.requests[state.requestIndex];
   const canRecruitCurrent = requestMonster ? hasCompatibleCage(requestMonster) : false;
   els.keepButton.disabled = !canRecruitCurrent;
@@ -1511,6 +1565,55 @@ function updateResources() {
   els.matchCageCount.hidden = !canRecruitCurrent;
   updateRequestInbox();
   scheduleAutosave();
+}
+
+function setShopItemLock(item, unlocked, level) {
+  if (!item) return;
+  item.classList.toggle("locked", !unlocked);
+  item.dataset.unlockLabel = unlocked ? "" : `PL${level}で解放`;
+}
+
+function recoverCatalogHearts(now = Date.now()) {
+  if (state.catalogHearts >= MAX_CATALOG_HEARTS) {
+    state.catalogHearts = MAX_CATALOG_HEARTS;
+    state.catalogHeartUpdatedAt = now;
+    return;
+  }
+  const elapsed = Math.max(0, now - state.catalogHeartUpdatedAt);
+  const recovered = Math.floor(elapsed / CATALOG_HEART_RECOVERY_MS);
+  if (recovered <= 0) return;
+  state.catalogHearts = Math.min(MAX_CATALOG_HEARTS, state.catalogHearts + recovered);
+  state.catalogHeartUpdatedAt += recovered * CATALOG_HEART_RECOVERY_MS;
+  if (state.catalogHearts >= MAX_CATALOG_HEARTS) state.catalogHeartUpdatedAt = now;
+}
+
+function updateCatalogHeartDisplay() {
+  if (!els.catalogHeartDisplay) return;
+  recoverCatalogHearts();
+  els.catalogHeartDisplay.textContent = `${"♥".repeat(state.catalogHearts)}${"♡".repeat(MAX_CATALOG_HEARTS - state.catalogHearts)}`;
+  if (state.catalogHearts >= MAX_CATALOG_HEARTS) {
+    els.catalogHeartTimer.textContent = "MAX";
+    return;
+  }
+  const remaining = Math.max(
+    0,
+    CATALOG_HEART_RECOVERY_MS - (Date.now() - state.catalogHeartUpdatedAt)
+  );
+  const totalSeconds = Math.ceil(remaining / 1000);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  els.catalogHeartTimer.textContent = `次まで ${minutes}:${seconds}`;
+}
+
+function consumeCatalogHeart() {
+  recoverCatalogHearts();
+  if (state.catalogHearts <= 0) return false;
+  if (state.catalogHearts >= MAX_CATALOG_HEARTS) {
+    state.catalogHeartUpdatedAt = Date.now();
+  }
+  state.catalogHearts -= 1;
+  updateCatalogHeartDisplay();
+  return true;
 }
 
 function formatSaveTimestamp(savedAt) {
@@ -1636,16 +1739,6 @@ function unlockedRanksForPlayer() {
   return monsterRanks.filter((rank) => unlockedNames.includes(rank.name));
 }
 
-function chooseUnlockedRank() {
-  const unlocked = unlockedRanksForPlayer();
-  const totalWeight = unlocked.reduce((sum, rank) => sum + rank.weight, 0);
-  let roll = Math.random() * totalWeight;
-  return unlocked.find((rank) => {
-    roll -= rank.weight;
-    return roll <= 0;
-  }) ?? unlocked[0];
-}
-
 function profileMonsters() {
   return state.profileMonsterIds
     .map((id) => state.friends.find((monster) => monster.id === id))
@@ -1674,8 +1767,10 @@ function outgoingDifficulty(rate) {
 }
 
 function outgoingSpeciesPool() {
-  const discovered = monsterSpecies.filter((species) => state.discoveredSpecies.has(species.no));
-  if (Math.random() < 0.12 || discovered.length === 0) return monsterSpecies;
+  const unlockedRankNames = new Set(unlockedRanksForPlayer().map((rank) => rank.name));
+  const unlockedSpecies = monsterSpecies.filter((species) => unlockedRankNames.has(species.rank));
+  const discovered = unlockedSpecies.filter((species) => state.discoveredSpecies.has(species.no));
+  if (Math.random() < 0.12 || discovered.length === 0) return unlockedSpecies;
   return discovered;
 }
 
@@ -1690,12 +1785,10 @@ function generateOutgoingCandidates() {
     }
     const species = pick(pool);
     usedSpecies.add(species.no);
-    const rank = chooseUnlockedRank();
     const level = randomInt(1, Math.max(1, state.playerLevel));
-    return createMonster(0, species.no, level, { rankName: rank.name });
+    return createMonster(0, species.no, level);
   });
   state.outgoingGeneratedAt = Date.now();
-  state.outgoingApplied = false;
   els.outgoingMatchFeedback.hidden = true;
   renderOutgoingMatch();
 }
@@ -1718,6 +1811,10 @@ function renderMatchProfile() {
 function outgoingCandidateMarkup(monster) {
   const rate = outgoingMatchRate(monster);
   const profileReady = profileMonsters().length === 3;
+  const canApply = profileReady
+    && state.catalogHearts > 0
+    && !state.catalogMatchAnimating
+    && hasCompatibleCage(monster);
   return `
     <article class="outgoing-monster-card" data-outgoing-detail-id="${monster.id}"
       style="--candidate-bg:${monster.attr.bg}" tabindex="0">
@@ -1733,7 +1830,7 @@ function outgoingCandidateMarkup(monster) {
         <span class="sp-chip">SP ${monster.sp}</span>
       </div>
       <button class="outgoing-apply-button" data-outgoing-id="${monster.id}" type="button"
-        ${state.outgoingApplied || !profileReady || !hasCompatibleCage(monster) ? "disabled" : ""}>
+        ${canApply ? "" : "disabled"}>
         <span>マッチ申請</span>
         <strong>${Math.round(rate)}%</strong>
       </button>
@@ -1741,26 +1838,32 @@ function outgoingCandidateMarkup(monster) {
 }
 
 function renderOutgoingMatch() {
+  recoverCatalogHearts();
   renderMatchProfile();
   els.outgoingMonsterList.innerHTML = state.outgoingCandidates
     .map(outgoingCandidateMarkup)
     .join("");
-  if (!state.outgoingApplied && profileMonsters().length !== 3) {
+  if (profileMonsters().length !== 3) {
     els.outgoingMatchFeedback.textContent = "プロフィールに3体設定するとマッチ申請できます。";
     els.outgoingMatchFeedback.className = "outgoing-match-feedback warning";
     els.outgoingMatchFeedback.hidden = false;
   } else if (
-    !state.outgoingApplied
-    && !state.outgoingCandidates.some((monster) => hasCompatibleCage(monster))
+    !state.outgoingCandidates.some((monster) => hasCompatibleCage(monster))
   ) {
     els.outgoingMatchFeedback.textContent = "表示中のモンスターに使えるケージがありません。";
     els.outgoingMatchFeedback.className = "outgoing-match-feedback warning";
     els.outgoingMatchFeedback.hidden = false;
+  } else if (state.catalogHearts <= 0) {
+    els.outgoingMatchFeedback.textContent = "申請ハートがありません。30分で1つ回復します。";
+    els.outgoingMatchFeedback.className = "outgoing-match-feedback warning";
+    els.outgoingMatchFeedback.hidden = false;
   }
+  updateCatalogHeartDisplay();
   updateOutgoingRefreshTimer();
 }
 
 function updateOutgoingRefreshTimer() {
+  updateCatalogHeartDisplay();
   if (!state.outgoingGeneratedAt) {
     els.outgoingRefreshTimer.textContent = "更新可";
     els.refreshOutgoingMatch.disabled = false;
@@ -1814,7 +1917,12 @@ function closeOutgoingMatch() {
 }
 
 function openCageSelection(monsterId) {
-  if (state.outgoingApplied || profileMonsters().length !== 3) return;
+  recoverCatalogHearts();
+  if (
+    state.catalogMatchAnimating
+    || state.catalogHearts <= 0
+    || profileMonsters().length !== 3
+  ) return;
   const monster = state.outgoingCandidates.find((candidate) => candidate.id === monsterId);
   if (!monster || !hasCompatibleCage(monster)) return;
   state.pendingOutgoingMonsterId = monsterId;
@@ -1835,7 +1943,11 @@ function cageSuccessMultiplier(cageType = "standard") {
 }
 
 function applyOutgoingMatch() {
-  if (state.outgoingApplied || profileMonsters().length !== 3) return;
+  if (
+    state.catalogMatchAnimating
+    || profileMonsters().length !== 3
+    || state.catalogHearts <= 0
+  ) return;
   const monsterId = state.pendingOutgoingMonsterId;
   const monster = state.outgoingCandidates.find((candidate) => candidate.id === monsterId);
   const cageType = state.selectedOutgoingCageType;
@@ -1847,11 +1959,17 @@ function applyOutgoingMatch() {
   ) return;
   const rate = Math.min(100, outgoingMatchRate(monster) * cageSuccessMultiplier(cageType));
   const success = Math.random() * 100 < rate;
+  if (!consumeCatalogHeart()) return;
   consumeCage(cageType);
-  state.outgoingApplied = true;
   state.pendingOutgoingMonsterId = null;
   state.selectedOutgoingCageType = null;
   els.cageSelectDialog.close();
+  showCatalogMatchResult(monster, success);
+}
+
+function finishCatalogMatchResult(monster, success) {
+  state.catalogMatchAnimating = false;
+  els.catalogMatchOverlay.hidden = true;
   els.outgoingMatchFeedback.className = `outgoing-match-feedback ${success ? "success" : "failure"}`;
   if (success && state.friends.length < MAX_FRIENDS) {
     addFriendDirect(monster);
@@ -1864,9 +1982,33 @@ function applyOutgoingMatch() {
   } else {
     els.outgoingMatchFeedback.textContent = `マッチ不成立。${monster.name}から返事はありませんでした。`;
   }
+  state.outgoingCandidates = state.outgoingCandidates.filter((candidate) => candidate.id !== monster.id);
   els.outgoingMatchFeedback.hidden = false;
   updateResources();
   renderOutgoingMatch();
+}
+
+function showCatalogMatchResult(monster, success) {
+  state.catalogMatchAnimating = true;
+  els.catalogMatchMonster.setAttribute("style", monsterStyle(monster));
+  els.catalogMatchStageTitle.textContent = "マッチ申請を送信中…";
+  els.catalogMatchStageCopy.textContent = `${monster.name}の返事を待っています`;
+  els.catalogMatchOverlay.className = "catalog-match-overlay";
+  els.catalogMatchOverlay.hidden = false;
+  renderOutgoingMatch();
+  window.setTimeout(() => {
+    els.catalogMatchStageTitle.textContent = "返事が届きました";
+    els.catalogMatchStageCopy.textContent = "結果を確認しています…";
+    els.catalogMatchOverlay.classList.add("waiting");
+  }, 950);
+  window.setTimeout(() => {
+    els.catalogMatchOverlay.classList.add(success ? "success" : "failure");
+    els.catalogMatchStageTitle.textContent = success ? "MATCH!" : "NO MATCH";
+    els.catalogMatchStageCopy.textContent = success
+      ? `${monster.name}とマッチしました！`
+      : "今回は縁がなかったようです";
+  }, 1900);
+  window.setTimeout(() => finishCatalogMatchResult(monster, success), 3100);
 }
 
 function showView(viewId) {
@@ -2374,6 +2516,7 @@ function buyCage() {
 }
 
 function buyCageF() {
+  if (state.playerLevel < 3) return;
   if (state.gold < CAGE_F_PRICE) {
     els.shopFeedback.textContent = "Goldが足りません";
     return;
@@ -2385,14 +2528,75 @@ function buyCageF() {
 }
 
 function buyExpDrink() {
+  if (state.playerLevel < 7) return;
   if (state.gold < EXP_DRINK_PRICE) {
     els.shopFeedback.textContent = "ゴールドが足りません。";
     return;
   }
   state.gold -= EXP_DRINK_PRICE;
   state.expDrinks += 1;
-  els.shopFeedback.textContent = "経験値500ドリンクを購入しました。";
+  els.shopFeedback.textContent = "経験値3000ドリンクを購入しました。";
   updateResources();
+}
+
+function buyExpMist() {
+  if (state.playerLevel < 4) return;
+  if (state.gold < EXP_MIST_PRICE) {
+    els.shopFeedback.textContent = "Goldが足りません。";
+    return;
+  }
+  state.gold -= EXP_MIST_PRICE;
+  state.expMists += 1;
+  els.shopFeedback.textContent = "経験値500ミストを購入しました。";
+  updateResources();
+}
+
+function useExpMist() {
+  if (state.expMists <= 0 || state.friends.length === 0) return;
+  const levelUps = state.friends.reduce((count, monster) => (
+    count + (grantExperience(monster, EXP_MIST_AMOUNT).leveledUp ? 1 : 0)
+  ), 0);
+  state.expMists -= 1;
+  els.shopFeedback.textContent = `仲間全員が${EXP_MIST_AMOUNT} EXP獲得${levelUps ? ` / ${levelUps}体がレベルアップ！` : ""}`;
+  renderParty();
+  updateResources();
+}
+
+function buyCatalogChange() {
+  if (state.gold < CATALOG_CHANGE_PRICE) {
+    els.shopFeedback.textContent = "Goldが足りません。";
+    return;
+  }
+  state.gold -= CATALOG_CHANGE_PRICE;
+  state.catalogChanges += 1;
+  els.shopFeedback.textContent = "カタログチェンジを購入しました。";
+  updateResources();
+}
+
+function useCatalogChange() {
+  if (state.catalogChanges <= 0) return;
+  state.catalogChanges -= 1;
+  generateOutgoingCandidates();
+  els.shopFeedback.textContent = "カタログを更新しました。";
+  updateResources();
+}
+
+function buyHeartPlus() {
+  recoverCatalogHearts();
+  if (state.catalogHearts >= MAX_CATALOG_HEARTS) {
+    els.shopFeedback.textContent = "申請ハートはすでに最大です。";
+    return;
+  }
+  if (state.gold < HEART_PLUS_PRICE) {
+    els.shopFeedback.textContent = "Goldが足りません。";
+    return;
+  }
+  state.gold -= HEART_PLUS_PRICE;
+  state.catalogHearts = MAX_CATALOG_HEARTS;
+  state.catalogHeartUpdatedAt = Date.now();
+  els.shopFeedback.textContent = "申請ハートが全回復しました。";
+  updateResources();
+  renderOutgoingMatch();
 }
 
 function openExpDrinkDialog() {
@@ -2403,7 +2607,7 @@ function openExpDrinkDialog() {
 }
 
 function renderExpDrinkDialog() {
-  els.expDrinkDialogStatus.textContent = `経験値500ドリンク 所持数 ${state.expDrinks}`;
+  els.expDrinkDialogStatus.textContent = `経験値3000ドリンク 所持数 ${state.expDrinks}`;
   els.expDrinkRoster.innerHTML = state.friends.map((monster) => (
     monsterListCardMarkup(monster, "drink-target")
   )).join("");
@@ -4966,6 +5170,11 @@ function bindEvents() {
   els.buyCageFButton.addEventListener("click", buyCageF);
   els.buyExpDrinkButton.addEventListener("click", buyExpDrink);
   els.useExpDrinkButton.addEventListener("click", openExpDrinkDialog);
+  els.buyExpMistButton.addEventListener("click", buyExpMist);
+  els.useExpMistButton.addEventListener("click", useExpMist);
+  els.buyCatalogChangeButton.addEventListener("click", buyCatalogChange);
+  els.useCatalogChangeButton.addEventListener("click", useCatalogChange);
+  els.buyHeartPlusButton.addEventListener("click", buyHeartPlus);
   els.closeExpDrinkDialog.addEventListener("click", () => els.expDrinkDialog.close());
   els.expDrinkDialog.addEventListener("click", (event) => {
     if (clickedDialogBackdrop(event, els.expDrinkDialog)) els.expDrinkDialog.close();

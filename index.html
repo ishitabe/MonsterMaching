@@ -113,7 +113,7 @@
             <button class="match-menu-card outgoing-match-card" id="outgoingMatchButton" type="button">
               <span class="outgoing-match-icon">↗</span>
               <span class="inbox-copy">
-                <strong>モンスターを探す</strong>
+                <strong>カタログマッチ</strong>
                 <small id="outgoingUnlockCopy">プレイヤーLv3で解放</small>
               </span>
               <span class="outgoing-count-label" id="outgoingCountLabel">Lv3</span>
@@ -123,13 +123,18 @@
             <div class="outgoing-match-head">
               <button class="icon-back-button" id="closeOutgoingMatch" type="button" aria-label="マッチメニューへ戻る">‹</button>
               <div>
-                <p class="eyebrow">FIND MONSTERS</p>
-                <h2>一覧マッチ</h2>
+              <p class="eyebrow">MONSTER CATALOG</p>
+              <h2>カタログマッチ</h2>
               </div>
               <button class="refresh-match-button" id="refreshOutgoingMatch" type="button">
                 <span>更新</span>
-                <small id="outgoingRefreshTimer">6:00:00</small>
+                <small id="outgoingRefreshTimer">3:00:00</small>
               </button>
+            </div>
+            <div class="catalog-heart-row">
+              <span>申請ハート</span>
+              <strong id="catalogHeartDisplay">♥♥♥♥♥</strong>
+              <small id="catalogHeartTimer">MAX</small>
             </div>
             <div class="match-profile-summary">
               <div>
@@ -176,7 +181,7 @@
             <span class="selection-count">Gold <strong id="shopGold">320</strong></span>
           </div>
           <p class="home-caption">マッチしたモンスターを仲間にするための道具です。</p>
-          <section class="shop-item">
+          <section class="shop-item" id="shopCageFItem">
             <div class="cage-icon" aria-hidden="true"><i></i></div>
             <div class="shop-item-copy">
               <strong>モンスターケージG</strong>
@@ -200,20 +205,62 @@
               <strong>300 Gold</strong>
             </button>
           </section>
-          <section class="shop-item">
+          <section class="shop-item" id="shopExpDrinkItem">
             <div class="exp-drink-icon" aria-hidden="true"><i>EXP</i></div>
             <div class="shop-item-copy">
-              <strong>経験値500ドリンク</strong>
+              <strong>経験値3000ドリンク</strong>
               <span>所持数 <b id="shopExpDrinkCount">0</b></span>
-              <small>好きな仲間1体に500経験値</small>
+              <small>好きな仲間1体に3000経験値 / PL7で解放</small>
             </div>
             <div class="shop-item-actions">
               <button class="shop-buy-button" id="buyExpDrinkButton" type="button">
                 <span>1個購入</span>
-                <strong>200 Gold</strong>
+                <strong>1500 Gold</strong>
               </button>
               <button class="shop-use-button" id="useExpDrinkButton" type="button">使う</button>
             </div>
+          </section>
+          <section class="shop-item" id="shopExpMistItem">
+            <div class="exp-drink-icon exp-mist-icon" aria-hidden="true"><i>ALL</i></div>
+            <div class="shop-item-copy">
+              <strong>経験値500ミスト</strong>
+              <span>所持数 <b id="shopExpMistCount">0</b></span>
+              <small>仲間全員に500経験値 / PL4で解放</small>
+            </div>
+            <div class="shop-item-actions">
+              <button class="shop-buy-button" id="buyExpMistButton" type="button">
+                <span>1個購入</span>
+                <strong>700 Gold</strong>
+              </button>
+              <button class="shop-use-button" id="useExpMistButton" type="button">使う</button>
+            </div>
+          </section>
+          <section class="shop-item">
+            <div class="catalog-item-icon" aria-hidden="true">↻</div>
+            <div class="shop-item-copy">
+              <strong>カタログチェンジ</strong>
+              <span>所持数 <b id="shopCatalogChangeCount">0</b></span>
+              <small>カタログマッチの一覧をすぐ更新</small>
+            </div>
+            <div class="shop-item-actions">
+              <button class="shop-buy-button" id="buyCatalogChangeButton" type="button">
+                <span>1個購入</span>
+                <strong>1000 Gold</strong>
+              </button>
+              <button class="shop-use-button" id="useCatalogChangeButton" type="button">使う</button>
+            </div>
+          </section>
+          <section class="shop-item">
+            <div class="catalog-item-icon heart-plus-icon" aria-hidden="true">♥</div>
+            <div class="shop-item-copy">
+              <strong>ハートプラス</strong>
+              <span>申請ハートを5つまで回復</span>
+              <small>購入時にその場で全回復</small>
+            </div>
+            <button class="shop-buy-button" id="buyHeartPlusButton" type="button">
+              <span>使用する</span>
+              <strong>2000 Gold</strong>
+            </button>
           </section>
           <p class="shop-feedback" id="shopFeedback" aria-live="polite"></p>
         </div>
@@ -492,11 +539,21 @@
         </div>
         <button class="close-button" id="closeExpDrinkDialog" type="button" aria-label="閉じる">×</button>
       </div>
-      <p class="dialog-copy">選んだモンスターに500経験値を与えます。</p>
+      <p class="dialog-copy">選んだモンスターに3000経験値を与えます。</p>
       <p class="exp-drink-dialog-status" id="expDrinkDialogStatus">所持数 0</p>
       <p class="exp-drink-feedback" id="expDrinkFeedback" hidden></p>
       <div class="roster picker-roster" id="expDrinkRoster"></div>
     </dialog>
+
+    <div class="catalog-match-overlay" id="catalogMatchOverlay" hidden>
+      <div class="catalog-match-stage">
+        <div class="catalog-match-monster mini-monster" id="catalogMatchMonster"></div>
+        <p class="eyebrow">MATCH APPLICATION</p>
+        <h2 id="catalogMatchStageTitle">申請を送信中…</h2>
+        <div class="catalog-match-pulse"><i></i><i></i><i></i></div>
+        <p id="catalogMatchStageCopy">返事を待っています</p>
+      </div>
+    </div>
 
     <dialog class="party-picker-dialog pair-picker-dialog" id="pairPickerDialog">
       <div class="dialog-head">
