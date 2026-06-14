@@ -20,6 +20,7 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -34,6 +35,16 @@ body {
 button {
   color: inherit;
   font: inherit;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  touch-action: manipulation;
 }
 
 .app {
