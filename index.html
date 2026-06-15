@@ -206,6 +206,21 @@
             </button>
           </section>
           <section class="shop-item" id="shopExpDrinkItem">
+            <div class="exp-drink-icon" aria-hidden="true"><i>500</i></div>
+            <div class="shop-item-copy">
+              <strong>経験値500ドリンク</strong>
+              <span>所持数 <b id="shopExp500DrinkCount">0</b></span>
+              <small>好きな仲間1体に500経験値</small>
+            </div>
+            <div class="shop-item-actions">
+              <button class="shop-buy-button" id="buyExp500DrinkButton" type="button">
+                <span>1個購入</span>
+                <strong>200 Gold</strong>
+              </button>
+              <button class="shop-use-button" id="useExp500DrinkButton" type="button">使う</button>
+            </div>
+          </section>
+          <section class="shop-item" id="shopExp3000DrinkItem">
             <div class="exp-drink-icon" aria-hidden="true"><i>EXP</i></div>
             <div class="shop-item-copy">
               <strong>経験値3000ドリンク</strong>
@@ -539,7 +554,7 @@
         </div>
         <button class="close-button" id="closeExpDrinkDialog" type="button" aria-label="閉じる">×</button>
       </div>
-      <p class="dialog-copy">選んだモンスターに3000経験値を与えます。</p>
+      <p class="dialog-copy" id="expDrinkDialogCopy">選んだモンスターに経験値を与えます。</p>
       <p class="exp-drink-dialog-status" id="expDrinkDialogStatus">所持数 0</p>
       <p class="exp-drink-feedback" id="expDrinkFeedback" hidden></p>
       <div class="roster picker-roster" id="expDrinkRoster"></div>
@@ -677,6 +692,10 @@
       <div class="detail-summary">
         <div class="detail-visual" id="detailVisual">
           <div class="monster-art detail-monster" aria-hidden="true"></div>
+          <button class="pair-history-button" id="openPairHistory" type="button">
+            <span aria-hidden="true">系</span>履歴
+            <b id="detailPairHistoryCount" hidden>0</b>
+          </button>
           <div class="detail-image-identity">
             <p class="eyebrow">MONSTER PROFILE</p>
             <h2 id="detailName">---</h2>
@@ -714,6 +733,18 @@
       <div class="detail-select-actions" id="detailSelectActions" hidden>
         <button class="primary-button" id="confirmPartyMonster" type="button">このモンスターに決定</button>
       </div>
+    </dialog>
+
+    <dialog class="pair-history-dialog" id="pairHistoryDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">PAIR TRAINING LINEAGE</p>
+          <h2 id="pairHistoryTitle">ペアトレ履歴</h2>
+        </div>
+        <button class="close-button" id="closePairHistory" type="button" aria-label="閉じる">×</button>
+      </div>
+      <p class="pair-history-caption" id="pairHistoryCaption"></p>
+      <div class="pair-history-viewport" id="pairHistoryViewport"></div>
     </dialog>
 
     <div class="match-overlay" id="matchOverlay" hidden>

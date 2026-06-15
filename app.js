@@ -97,6 +97,8 @@ const monsterRanks = [
 const MAX_FRIENDS = 100;
 const CAGE_PRICE = 100;
 const CAGE_F_PRICE = 300;
+const EXP_500_DRINK_PRICE = 200;
+const EXP_500_DRINK_AMOUNT = 500;
 const EXP_DRINK_PRICE = 1500;
 const EXP_DRINK_AMOUNT = 3000;
 const EXP_MIST_PRICE = 700;
@@ -106,7 +108,7 @@ const HEART_PLUS_PRICE = 2000;
 const MAX_CATALOG_HEARTS = 5;
 const CATALOG_HEART_RECOVERY_MS = 30 * 60 * 1000;
 const OUTGOING_MATCH_REFRESH_MS = 3 * 60 * 60 * 1000;
-const SAVE_VERSION = 5;
+const SAVE_VERSION = 7;
 const AUTOSAVE_KEY = "monmachi.save.autosave";
 const MANUAL_SAVE_PREFIX = "monmachi.save.slot.";
 const MANUAL_SAVE_SLOT_COUNT = 5;
@@ -143,9 +145,12 @@ function rankIndex(rankName) {
   return monsterRanks.findIndex((rank) => rank.name === rankName);
 }
 
+function cageRankName(cageType) {
+  return monsterRanks.some((rank) => rank.name === cageType) ? cageType : "G";
+}
+
 function cageCanHold(cageType, monster) {
-  const cageRank = cageType === "F" ? "F" : "G";
-  return rankIndex(monster.rank.name) <= rankIndex(cageRank);
+  return rankIndex(monster.rank.name) <= rankIndex(cageRankName(cageType));
 }
 
 function cageCount(cageType) {
@@ -491,6 +496,7 @@ const state = {
   gold: 320,
   cages: 1,
   cagesF: 0,
+  exp500Drinks: 0,
   expDrinks: 0,
   expMists: 0,
   catalogChanges: 0,
@@ -571,6 +577,7 @@ const state = {
   detailMode: "view",
   detailMonsterId: null,
   detailMonsterRef: null,
+  activeExpDrinkAmount: EXP_DRINK_AMOUNT,
   requestLocked: false,
   dragging: false,
   dragAxis: null,
@@ -609,12 +616,13 @@ function cacheElements() {
     "monsterTabButton", "dungeonTabButton", "trainingTabButton", "matchTabButton", "shopTabButton",
     "shopGold", "shopCageCount", "buyCageButton", "shopCageFItem", "shopCageFCount", "buyCageFButton",
     "shopFeedback",
-    "shopExpDrinkItem", "shopExpDrinkCount", "buyExpDrinkButton", "useExpDrinkButton",
+    "shopExpDrinkItem", "shopExp500DrinkCount", "buyExp500DrinkButton", "useExp500DrinkButton",
+    "shopExp3000DrinkItem", "shopExpDrinkCount", "buyExpDrinkButton", "useExpDrinkButton",
     "shopExpMistItem", "shopExpMistCount", "buyExpMistButton", "useExpMistButton",
     "shopCatalogChangeCount", "buyCatalogChangeButton", "useCatalogChangeButton",
     "buyHeartPlusButton",
     "expDrinkDialog", "closeExpDrinkDialog", "expDrinkRoster",
-    "expDrinkDialogStatus", "expDrinkFeedback",
+    "expDrinkDialogCopy", "expDrinkDialogStatus", "expDrinkFeedback",
     "collectionCount", "collectionGrid", "collectionSort", "collectionAttributeFilter",
     "openPartyEditorButton",
     "partyDialog", "closePartyDialog", "selectedDungeonName",
@@ -662,6 +670,8 @@ function cacheElements() {
     "detailIvHp", "detailIvAtk", "detailIvSense",
     "detailIvHpValue", "detailIvAtkValue", "detailIvSenseValue",
     "detailSelectActions", "confirmPartyMonster",
+    "openPairHistory", "detailPairHistoryCount", "pairHistoryDialog", "closePairHistory",
+    "pairHistoryTitle", "pairHistoryCaption", "pairHistoryViewport",
     "matchOverlay", "matchMonster",
     "matchedName", "experienceOverlay", "experienceTitle", "experienceAmount",
     "experienceList", "experienceContinueButton",
@@ -779,6 +789,37 @@ function calculateTrainingBonus(parentA, parentB) {
 function combinedTalent(parentA, parentB) {
   return Math.max(1, Number(parentA.talent) || 1)
     + Math.max(1, Number(parentB.talent) || 1);
+}
+
+function clonePairLineage(lineage) {
+  if (!lineage) return null;
+  return JSON.parse(JSON.stringify(lineage));
+}
+
+function pairLineageIdentity(monster) {
+  return {
+    speciesNo: monster.speciesNo,
+    name: monster.name,
+    level: monster.level,
+    rankName: monster.rank?.name ?? monster.rankName ?? "G",
+    attribute: monster.attr?.name ?? "",
+    sp: monster.sp,
+    hp: monster.hp,
+    power: monster.power,
+    star: monster.star,
+    talent: Math.max(1, Number(monster.talent) || 1),
+    iv: { ...monster.iv },
+    bodyRadius: monster.bodyRadius,
+    color: monster.attr?.monster ?? "#76c6a7",
+    background: monster.attr?.bg ?? "#e7f4ef"
+  };
+}
+
+function pairLineageNode(monster) {
+  return {
+    monster: pairLineageIdentity(monster),
+    pairing: clonePairLineage(monster.pairLineage)
+  };
 }
 
 function nextLevelExperience(monster) {
@@ -1022,6 +1063,7 @@ function createMonster(boost = 0, speciesNo = null, levelOverride = null, option
       power: 0,
       star: 0
     },
+    pairLineage: null,
     leftMove: leftMove.name,
     leftMoveMultiplier: leftMove.multiplier,
     leftMoves: selectedLeftMoves,
@@ -1086,6 +1128,7 @@ function hydrateMonster(savedMonster) {
       star: species.star
     },
     trainingBonus: savedMonster.trainingBonus ?? { hp: 0, power: 0, star: 0 },
+    pairLineage: savedMonster.pairLineage ?? null,
     iv: savedMonster.iv ?? { hp: 0, atk: 0, sense: 0 },
     escapeChance: savedMonster.escapeChance ?? species.escapeChance ?? 0,
     defeatExperienceBonus: savedMonster.defeatExperienceBonus
@@ -1120,6 +1163,7 @@ function createSaveData() {
     gold: state.gold,
     cages: state.cages,
     cagesF: state.cagesF,
+    exp500Drinks: state.exp500Drinks,
     expDrinks: state.expDrinks,
     expMists: state.expMists,
     catalogChanges: state.catalogChanges,
@@ -1190,6 +1234,17 @@ function migrateSaveData(savedData) {
     migrated.catalogHearts = MAX_CATALOG_HEARTS;
     migrated.catalogHeartUpdatedAt = Date.now();
   }
+  if (migrated.saveVersion < 6) {
+    const addEmptyLineage = (monster) => (
+      monster ? { ...monster, pairLineage: monster.pairLineage ?? null } : monster
+    );
+    migrated.friends = (migrated.friends ?? []).map(addEmptyLineage);
+    migrated.outgoingCandidates = (migrated.outgoingCandidates ?? []).map(addEmptyLineage);
+    migrated.requests = (migrated.requests ?? []).map(addEmptyLineage);
+  }
+  if (migrated.saveVersion < 7) {
+    migrated.exp500Drinks = 0;
+  }
   migrated.saveVersion = SAVE_VERSION;
   return migrated;
 }
@@ -1245,6 +1300,7 @@ function applySaveData(rawSave) {
   state.gold = Math.max(0, Number(saved.gold) || 0);
   state.cages = Math.max(0, Number(saved.cages) || 0);
   state.cagesF = Math.max(0, Number(saved.cagesF) || 0);
+  state.exp500Drinks = Math.max(0, Number(saved.exp500Drinks) || 0);
   state.expDrinks = Math.max(0, Number(saved.expDrinks) || 0);
   state.expMists = Math.max(0, Number(saved.expMists) || 0);
   state.catalogChanges = Math.max(0, Number(saved.catalogChanges) || 0);
@@ -1382,6 +1438,7 @@ function startTutorial() {
   state.gold = 320;
   state.cages = 1;
   state.cagesF = 0;
+  state.exp500Drinks = 0;
   state.expDrinks = 0;
   state.expMists = 0;
   state.catalogChanges = 0;
@@ -1485,6 +1542,7 @@ function skipTutorial() {
   state.gold = 320;
   state.cages = 0;
   state.cagesF = 0;
+  state.exp500Drinks = 0;
   state.expDrinks = 0;
   state.expMists = 0;
   state.catalogChanges = 0;
@@ -1531,6 +1589,7 @@ function updateResources() {
   els.shopCageFCount.textContent = state.cagesF;
   els.outgoingCageCount.textContent = state.cages;
   els.outgoingCageFCount.textContent = state.cagesF;
+  els.shopExp500DrinkCount.textContent = state.exp500Drinks;
   els.shopExpDrinkCount.textContent = state.expDrinks;
   els.shopExpMistCount.textContent = state.expMists;
   els.shopCatalogChangeCount.textContent = state.catalogChanges;
@@ -1541,10 +1600,12 @@ function updateResources() {
   const drinkUnlocked = state.playerLevel >= 7;
   setShopItemLock(els.shopCageFItem, cageFUnlocked, 3);
   setShopItemLock(els.shopExpMistItem, mistUnlocked, 4);
-  setShopItemLock(els.shopExpDrinkItem, drinkUnlocked, 7);
+  setShopItemLock(els.shopExp3000DrinkItem, drinkUnlocked, 7);
   els.buyCageFButton.disabled = !cageFUnlocked || state.gold < CAGE_F_PRICE;
+  els.buyExp500DrinkButton.disabled = state.gold < EXP_500_DRINK_PRICE;
   els.buyExpDrinkButton.disabled = !drinkUnlocked || state.gold < EXP_DRINK_PRICE;
   els.buyExpMistButton.disabled = !mistUnlocked || state.gold < EXP_MIST_PRICE;
+  els.useExp500DrinkButton.disabled = state.exp500Drinks <= 0 || state.friends.length === 0;
   els.useExpDrinkButton.disabled = state.expDrinks <= 0 || state.friends.length === 0;
   els.useExpMistButton.disabled = state.expMists <= 0 || state.friends.length === 0;
   els.buyCatalogChangeButton.disabled = state.gold < CATALOG_CHANGE_PRICE;
@@ -1930,16 +1991,33 @@ function openCageSelection(monsterId) {
   ["G", "F"].forEach((type) => {
     const choice = type === "G" ? els.standardCageChoice : els.fCageChoice;
     const available = cageCount(type) > 0 && cageCanHold(type, monster);
+    const rate = Math.min(100, outgoingMatchRate(monster) * cageSuccessMultiplier(type, monster));
     choice.disabled = !available;
     choice.classList.toggle("selected", type === state.selectedOutgoingCageType);
+    choice.querySelector("small").textContent = available
+      ? `${type}ランク以下に使用可能 / 成功率 ${Math.round(rate)}%`
+      : `${type}ランク以下に使用可能`;
   });
-  els.confirmOutgoingApplication.disabled = !state.selectedOutgoingCageType;
+  updateOutgoingCageConfirmation(monster);
   els.cageSelectDialog.showModal();
 }
 
-function cageSuccessMultiplier(cageType = "standard") {
-  void cageType;
-  return 1;
+function cageSuccessMultiplier(cageType, monster) {
+  const cageRank = rankIndex(cageRankName(cageType));
+  const monsterRank = rankIndex(monster.rank.name);
+  if (cageRank < 0 || monsterRank < 0 || cageRank < monsterRank) return 0;
+  return 1 + (cageRank - monsterRank) * 0.4;
+}
+
+function updateOutgoingCageConfirmation(monster) {
+  const cageType = state.selectedOutgoingCageType;
+  els.confirmOutgoingApplication.disabled = !cageType;
+  if (!cageType) {
+    els.confirmOutgoingApplication.textContent = "このケージで申請";
+    return;
+  }
+  const rate = Math.min(100, outgoingMatchRate(monster) * cageSuccessMultiplier(cageType, monster));
+  els.confirmOutgoingApplication.textContent = `このケージで申請（成功率 ${Math.round(rate)}%）`;
 }
 
 function applyOutgoingMatch() {
@@ -1957,7 +2035,7 @@ function applyOutgoingMatch() {
     || cageCount(cageType) <= 0
     || !cageCanHold(cageType, monster)
   ) return;
-  const rate = Math.min(100, outgoingMatchRate(monster) * cageSuccessMultiplier(cageType));
+  const rate = Math.min(100, outgoingMatchRate(monster) * cageSuccessMultiplier(cageType, monster));
   const success = Math.random() * 100 < rate;
   if (!consumeCatalogHeart()) return;
   consumeCage(cageType);
@@ -2364,6 +2442,12 @@ function createPairTrainingResult(baseMonster, partnerMonster, evolve) {
   result.trainingBonus = trainingBonus;
   applyCalculatedStats(result);
   result.nextLevelExperience = nextLevelExperience(result);
+  result.pairLineage = {
+    trainedAt: new Date().toISOString(),
+    evolved: Boolean(evolve && recipe),
+    base: pairLineageNode(baseMonster),
+    partner: pairLineageNode(partnerMonster)
+  };
   return result;
 }
 
@@ -2539,6 +2623,17 @@ function buyExpDrink() {
   updateResources();
 }
 
+function buyExp500Drink() {
+  if (state.gold < EXP_500_DRINK_PRICE) {
+    els.shopFeedback.textContent = "Goldが足りません。";
+    return;
+  }
+  state.gold -= EXP_500_DRINK_PRICE;
+  state.exp500Drinks += 1;
+  els.shopFeedback.textContent = "経験値500ドリンクを購入しました。";
+  updateResources();
+}
+
 function buyExpMist() {
   if (state.playerLevel < 4) return;
   if (state.gold < EXP_MIST_PRICE) {
@@ -2599,29 +2694,44 @@ function buyHeartPlus() {
   renderOutgoingMatch();
 }
 
-function openExpDrinkDialog() {
-  if (state.expDrinks <= 0 || state.friends.length === 0) return;
+function activeExpDrinkCount() {
+  return state.activeExpDrinkAmount === EXP_500_DRINK_AMOUNT
+    ? state.exp500Drinks
+    : state.expDrinks;
+}
+
+function openExpDrinkDialog(amount = EXP_DRINK_AMOUNT) {
+  state.activeExpDrinkAmount = amount;
+  if (activeExpDrinkCount() <= 0 || state.friends.length === 0) return;
   els.expDrinkFeedback.hidden = true;
   renderExpDrinkDialog();
   els.expDrinkDialog.showModal();
 }
 
 function renderExpDrinkDialog() {
-  els.expDrinkDialogStatus.textContent = `経験値3000ドリンク 所持数 ${state.expDrinks}`;
+  const amount = state.activeExpDrinkAmount;
+  const count = activeExpDrinkCount();
+  els.expDrinkDialogCopy.textContent = `選んだモンスターに${amount}経験値を与えます。`;
+  els.expDrinkDialogStatus.textContent = `経験値${amount}ドリンク 所持数 ${count}`;
   els.expDrinkRoster.innerHTML = state.friends.map((monster) => (
     monsterListCardMarkup(monster, "drink-target")
   )).join("");
   els.expDrinkRoster.querySelectorAll("[data-drink-target]").forEach((button) => {
-    button.disabled = state.expDrinks <= 0;
+    button.disabled = count <= 0;
   });
 }
 
 function useExpDrinkOnMonster(monsterId) {
-  if (state.expDrinks <= 0) return;
+  const amount = state.activeExpDrinkAmount;
+  if (activeExpDrinkCount() <= 0) return;
   const monster = state.friends.find((friend) => friend.id === monsterId);
   if (!monster) return;
-  const reward = grantExperience(monster, EXP_DRINK_AMOUNT);
-  state.expDrinks -= 1;
+  const reward = grantExperience(monster, amount);
+  if (amount === EXP_500_DRINK_AMOUNT) {
+    state.exp500Drinks -= 1;
+  } else {
+    state.expDrinks -= 1;
+  }
   updateResources();
   renderParty();
   renderExpDrinkDialog();
@@ -2629,7 +2739,7 @@ function useExpDrinkOnMonster(monsterId) {
   els.expDrinkFeedback.classList.toggle("level-up", reward.leveledUp);
   els.expDrinkFeedback.textContent = reward.leveledUp
     ? `${monster.name}　Lv ${reward.before.level} → Lv ${monster.level}！ HP +${reward.gains.hp} / パワー +${reward.gains.power} / スター +${reward.gains.star}`
-    : `${monster.name}に${EXP_DRINK_AMOUNT} EXP（${monster.experience} / ${monster.nextLevelExperience}）`;
+    : `${monster.name}に${amount} EXP（${monster.experience} / ${monster.nextLevelExperience}）`;
 }
 
 function renderProfileEditor() {
@@ -4779,6 +4889,98 @@ function currentDetailMonster() {
     ?? state.requests.find((monster) => monster.id === state.detailMonsterId);
 }
 
+function pairHistoryCounts(node) {
+  if (!node?.pairing) return { pairings: 0, monsters: 1 };
+  const base = pairHistoryCounts(node.pairing.base);
+  const partner = pairHistoryCounts(node.pairing.partner);
+  return {
+    pairings: 1 + base.pairings + partner.pairings,
+    monsters: 1 + base.monsters + partner.monsters
+  };
+}
+
+function hasLegacyPairTraining(monster) {
+  return !monster?.pairLineage && Object.values(monster?.trainingBonus ?? {})
+    .some((value) => Number(value) > 0);
+}
+
+function pairHistoryMonsterStyle(monster) {
+  return [
+    `--mini-bg:${monster.background ?? "#e7f4ef"}`,
+    `--mini-color:${monster.color ?? "#76c6a7"}`,
+    `--mini-radius:${monster.bodyRadius ?? "50%"}`
+  ].join(";");
+}
+
+function pairHistoryNodeMarkup(node, role = "継承個体") {
+  if (!node?.monster) return "";
+  const monster = node.monster;
+  const pairing = node.pairing;
+  const eventDate = pairing?.trainedAt
+    ? new Date(pairing.trainedAt).toLocaleDateString("ja-JP")
+    : "";
+  return `
+    <div class="lineage-tree">
+      <article class="lineage-monster-card">
+        <span class="lineage-role">${role}</span>
+        <span class="mini-monster" style="${pairHistoryMonsterStyle(monster)}"></span>
+        <strong>${monster.name}</strong>
+        <span>Lv ${monster.level} / ${monster.rankName}</span>
+        <b>SP ${monster.sp}</b>
+        <small>才能 ${monster.talent}</small>
+      </article>
+      ${pairing ? `
+        <div class="lineage-event">
+          <strong>${pairing.evolved ? "進化ペアトレ" : "ペアトレ"}</strong>
+          ${eventDate ? `<span>${eventDate}</span>` : ""}
+        </div>
+        <div class="lineage-branches">
+          <div class="lineage-branch">
+            ${pairHistoryNodeMarkup(pairing.base, "ベース")}
+          </div>
+          <div class="lineage-branch">
+            ${pairHistoryNodeMarkup(pairing.partner, "ペア相手")}
+          </div>
+        </div>
+      ` : ""}
+    </div>`;
+}
+
+function openPairHistoryDialog() {
+  const monster = currentDetailMonster();
+  if (!monster) return;
+  els.pairHistoryTitle.textContent = `${monster.name}の系譜`;
+  if (!monster.pairLineage) {
+    const legacyTraining = hasLegacyPairTraining(monster);
+    els.pairHistoryCaption.textContent = legacyTraining
+      ? "旧バージョンで行ったペアトレの詳細は保存されていません。"
+      : "このモンスターはまだペアトレをしていません。";
+    els.pairHistoryViewport.innerHTML = `
+      <div class="pair-history-empty">
+        <span class="mini-monster" style="${monsterStyle(monster)}"></span>
+        <strong>${monster.name}</strong>
+        <p>${legacyTraining
+          ? "特訓済みであることは確認できます。次回のペアトレから、相手とその祖先まで系譜に記録されます。"
+          : "最初のペアトレを行うと、ここから系譜が記録されます。"}</p>
+      </div>`;
+  } else {
+    const root = {
+      monster: pairLineageIdentity(monster),
+      pairing: monster.pairLineage
+    };
+    const counts = pairHistoryCounts(root);
+    els.pairHistoryCaption.textContent =
+      `ペアトレ ${counts.pairings}回 / 系譜に残る個体 ${counts.monsters}体`;
+    els.pairHistoryViewport.innerHTML = `
+      <div class="pair-history-canvas">${pairHistoryNodeMarkup(root, "現在")}</div>`;
+    els.pairHistoryViewport.scrollLeft = Math.max(
+      0,
+      (els.pairHistoryViewport.scrollWidth - els.pairHistoryViewport.clientWidth) / 2
+    );
+  }
+  els.pairHistoryDialog.showModal();
+}
+
 function handleAbilityInteraction(container, monsterProvider, event) {
   const button = event.target.closest("[data-ability-kind]");
   if (!button || !container.contains(button)) return;
@@ -4960,6 +5162,21 @@ function openMonsterDetail(monster = state.requests[state.requestIndex], mode = 
   els.detailIvHpValue.textContent = monster.iv.hp;
   els.detailIvAtkValue.textContent = monster.iv.atk;
   els.detailIvSenseValue.textContent = monster.iv.sense;
+  const historyCount = monster.pairLineage
+    ? pairHistoryCounts({ monster: pairLineageIdentity(monster), pairing: monster.pairLineage }).pairings
+    : 0;
+  const legacyHistory = hasLegacyPairTraining(monster);
+  els.openPairHistory.classList.toggle("has-history", historyCount > 0 || legacyHistory);
+  els.detailPairHistoryCount.hidden = historyCount === 0;
+  els.detailPairHistoryCount.textContent = historyCount;
+  els.openPairHistory.setAttribute(
+    "aria-label",
+    historyCount
+      ? `ペアトレ履歴 ${historyCount}件`
+      : legacyHistory
+        ? "旧データのペアトレ履歴あり"
+        : "ペアトレ履歴なし"
+  );
   els.detailVisual.style.setProperty("--detail-bg", monster.attr.bg);
   els.detailVisual.style.setProperty("--detail-color", monster.attr.monster);
   els.detailVisual.style.setProperty("--detail-horn", monster.attr.horn);
@@ -5168,8 +5385,16 @@ function bindEvents() {
   });
   els.buyCageButton.addEventListener("click", buyCage);
   els.buyCageFButton.addEventListener("click", buyCageF);
+  els.buyExp500DrinkButton.addEventListener("click", buyExp500Drink);
+  els.useExp500DrinkButton.addEventListener(
+    "click",
+    () => openExpDrinkDialog(EXP_500_DRINK_AMOUNT)
+  );
   els.buyExpDrinkButton.addEventListener("click", buyExpDrink);
-  els.useExpDrinkButton.addEventListener("click", openExpDrinkDialog);
+  els.useExpDrinkButton.addEventListener(
+    "click",
+    () => openExpDrinkDialog(EXP_DRINK_AMOUNT)
+  );
   els.buyExpMistButton.addEventListener("click", buyExpMist);
   els.useExpMistButton.addEventListener("click", useExpMist);
   els.buyCatalogChangeButton.addEventListener("click", buyCatalogChange);
@@ -5311,7 +5536,10 @@ function bindEvents() {
         "selected",
         state.selectedOutgoingCageType === "F"
       );
-      els.confirmOutgoingApplication.disabled = false;
+      const monster = state.outgoingCandidates.find(
+        (candidate) => candidate.id === state.pendingOutgoingMonsterId
+      );
+      if (monster) updateOutgoingCageConfirmation(monster);
     });
   });
   els.cageSelectDialog.addEventListener("click", (event) => {
@@ -5399,6 +5627,13 @@ function bindEvents() {
     });
   });
   els.confirmPartyMonster.addEventListener("click", confirmPartyMonsterSelection);
+  els.openPairHistory.addEventListener("click", openPairHistoryDialog);
+  els.closePairHistory.addEventListener("click", () => els.pairHistoryDialog.close());
+  els.pairHistoryDialog.addEventListener("click", (event) => {
+    if (clickedDialogBackdrop(event, els.pairHistoryDialog)) {
+      els.pairHistoryDialog.close();
+    }
+  });
   els.detailDialog.addEventListener("click", (event) => {
     if (clickedDialogBackdrop(event, els.detailDialog)) closeMonsterDetail();
   });
