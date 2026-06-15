@@ -78,9 +78,13 @@
           <p class="home-caption">挑戦するダンジョンを選んでください。</p>
           <div class="dungeon-list" id="generalDungeonList"></div>
           <div class="dungeon-list" id="trialDungeonList" hidden></div>
+          <div class="dungeon-list" id="specialDungeonList" hidden></div>
           <div class="dungeon-category-tabs" id="dungeonCategoryTabs">
             <button class="active" type="button" data-dungeon-category="general">通常ダンジョン</button>
             <button type="button" data-dungeon-category="trial">試練</button>
+            <button type="button" data-dungeon-category="special">
+              スペシャル <span class="category-lock-label">PL5</span>
+            </button>
           </div>
         </div>
 
@@ -156,7 +160,7 @@
             </div>
             <span class="selection-count">PLAYER Lv 5</span>
           </div>
-          <p class="home-caption">Lv10以上の2体で特訓します。編成中でも選択できますが、ペアトレ後は3体以上残す必要があります。</p>
+          <p class="home-caption">Lv10以上の2体で特訓します。</p>
           <div class="pair-training-selection">
             <button class="pair-training-slot" id="pairBaseSlot" type="button">
               <span class="pair-slot-label">BASE</span>
@@ -345,7 +349,7 @@
             <section class="combatant enemy-combatant">
               <div class="combatant-head">
                 <strong id="enemyName">---</strong>
-                <span>BOSS</span>
+                <span>GACHI</span>
               </div>
               <div class="fighter-status-icons" id="enemyStatusIcons"></div>
               <div class="hp-track"><i class="hp-fill" id="enemyHp"></i></div>
@@ -474,7 +478,7 @@
       </div>
       <section class="dungeon-boss-summary" id="dungeonBossSummary">
         <div class="dungeon-boss-heading">
-          <span>BOSS</span>
+          <span>GACHI</span>
           <button id="openDungeonDetails" type="button">詳細を見る</button>
         </div>
         <div class="dungeon-boss-list" id="dungeonBossList"></div>
@@ -579,7 +583,52 @@
         <button class="close-button" id="closePairPicker" type="button" aria-label="閉じる">×</button>
       </div>
       <p class="dialog-copy" id="pairPickerCopy">Lv10以上のモンスターを選択してください。</p>
+      <div class="collection-controls picker-controls">
+        <label>
+          <span>並び替え</span>
+          <select id="pairPickerSort">
+            <option value="newest">新しい順</option>
+            <option value="level">レベルが高い順</option>
+            <option value="sp">SPが高い順</option>
+            <option value="hp">HPが高い順</option>
+            <option value="power">パワーが高い順</option>
+            <option value="star">スターが高い順</option>
+            <option value="ivHp">個体値HPが高い順</option>
+            <option value="ivPower">個体値パワーが高い順</option>
+            <option value="ivStar">個体値スターが高い順</option>
+            <option value="ivTotal">個体値合計が高い順</option>
+          </select>
+        </label>
+        <label>
+          <span>属性</span>
+          <select id="pairPickerAttributeFilter">
+            <option value="all">すべて</option>
+            <option value="赤">赤</option>
+            <option value="緑">緑</option>
+            <option value="青">青</option>
+            <option value="白">白</option>
+            <option value="黒">黒</option>
+            <option value="無">無</option>
+          </select>
+        </label>
+      </div>
       <div class="roster picker-roster pair-picker-roster" id="pairPickerRoster"></div>
+    </dialog>
+
+    <dialog class="bench-action-dialog" id="pairActionDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">PAIR TRAINING</p>
+          <h2 id="pairActionName">モンスターを選択</h2>
+        </div>
+        <button class="close-button" id="closePairAction" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="bench-action-monster" id="pairActionMonster"></div>
+      <p class="dialog-copy" id="pairActionReason"></p>
+      <div class="bench-action-buttons">
+        <button class="secondary-button" id="pairActionDetailButton" type="button">詳細を見る</button>
+        <button class="primary-button" id="pairActionSelectButton" type="button">選択する</button>
+      </div>
     </dialog>
 
     <dialog class="confirm-dialog pair-evolution-dialog" id="pairEvolutionDialog">
@@ -640,6 +689,35 @@
           <h2 id="profilePickerTitle">プロフィール1を選択</h2>
         </div>
         <button class="close-button" id="closeProfilePicker" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="collection-controls picker-controls">
+        <label>
+          <span>並び替え</span>
+          <select id="profilePickerSort">
+            <option value="newest">新しい順</option>
+            <option value="level">レベルが高い順</option>
+            <option value="sp">SPが高い順</option>
+            <option value="hp">HPが高い順</option>
+            <option value="power">パワーが高い順</option>
+            <option value="star">スターが高い順</option>
+            <option value="ivHp">個体値HPが高い順</option>
+            <option value="ivPower">個体値パワーが高い順</option>
+            <option value="ivStar">個体値スターが高い順</option>
+            <option value="ivTotal">個体値合計が高い順</option>
+          </select>
+        </label>
+        <label>
+          <span>属性</span>
+          <select id="profilePickerAttributeFilter">
+            <option value="all">すべて</option>
+            <option value="赤">赤</option>
+            <option value="緑">緑</option>
+            <option value="青">青</option>
+            <option value="白">白</option>
+            <option value="黒">黒</option>
+            <option value="無">無</option>
+          </select>
+        </label>
       </div>
       <div class="roster picker-roster" id="profilePickerRoster"></div>
     </dialog>
@@ -858,7 +936,7 @@
           </select>
         </label>
         <label class="option-row">
-          <span><strong>ボスバトル速度</strong><small>演出と相手ターンの速度</small></span>
+          <span><strong>ガチバトル速度</strong><small>演出と相手ターンの速度</small></span>
           <select id="bossSpeedSelect">
             <option value="1">1倍</option>
             <option value="2">2倍</option>

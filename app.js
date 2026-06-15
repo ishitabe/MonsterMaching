@@ -1,3 +1,5 @@
+const NORMAL_ATTACK_MULTIPLIER = 0.5;
+
 const attributes = [
   { name: "赤", bg: "#fff0e6", color: "#b54708", monster: "#ef7654", horn: "#ffd166" },
   { name: "緑", bg: "#e8f7ee", color: "#067647", monster: "#58bd83", horn: "#d6e870" },
@@ -51,7 +53,7 @@ const monsterSpecies = [
   { no: 18, name: "ゴッレム", rank: "F", attribute: "緑", hp: 77, power: 25, star: 5, expTable: "A", passive: { name: "頑丈", effect: "相手からのダメージを10減らす" }, leftMove: moves.charge },
   { no: 19, name: "ピクシィィ", rank: "F", attribute: "青", hp: 65, power: 18, star: 27, expTable: "A", passive: { name: "幸運", effect: "戦闘開始時、ゲージを3増やす" }, leftMove: moves.healingWater },
   { no: 20, name: "ゾンビビッグ", rank: "F", attribute: "黒", hp: 68, power: 29, star: 9, expTable: "A", passive: { name: "アンデッド", effect: "HPが0になる時、30%でHP1で耐える" }, leftMove: moves.poisonBreath },
-  { no: 21, name: "スライム兄", rank: "F", attribute: "青", hp: 70, power: 20, star: 18, expTable: "A", passive: { name: "王の威厳", effect: "攻撃時、25%で相手に怯みを付与" }, rightMoves: [{ name: "アタック", attribute: "青", gauge: 1, multiplier: 1, effect: "使用者の属性で通常攻撃" }], leftMove: moves.slimePress },
+  { no: 21, name: "スライム兄", rank: "F", attribute: "青", hp: 70, power: 20, star: 18, expTable: "A", passive: { name: "王の威厳", effect: "攻撃時、25%で相手に怯みを付与" }, rightMoves: [{ name: "アタック", attribute: "青", gauge: 0, multiplier: NORMAL_ATTACK_MULTIPLIER, effect: "使用者の属性で0.5倍ダメージ" }], leftMove: moves.slimePress },
   { no: 39, name: "ゴールドピクシィィ", rank: "F", attribute: "青", hp: 65, power: 18, star: 27, expTable: "A", passive: { name: "黄金の幸運", effect: "40%で逃走。倒すと追加経験値1000" }, leftMove: moves.healingWater, escapeChance: 0.4, defeatExperienceBonus: 1000 }
 ];
 Object.assign(monsterSpecies.find((species) => species.no === 17), {
@@ -130,6 +132,11 @@ const PAIR_TRAIN_EVOLUTIONS = [
   { baseSpecies: 18, partnerSpecies: 16, resultSpecies: 34 },
   { baseSpecies: 16, partnerSpecies: 18, resultSpecies: 34 }
 ];
+const CATALOG_EXCLUDED_SPECIES = new Set(
+  PAIR_TRAIN_EVOLUTIONS.map((recipe) => recipe.resultSpecies)
+);
+const MAX_CATALOG_CANDIDATES = 15;
+const UNDISCOVERED_MATCH_RATE_MULTIPLIER = 0.7;
 const PLAYER_RANK_UNLOCKS = [
   { level: 1, rank: "G" },
   { level: 3, rank: "F" },
@@ -404,6 +411,48 @@ const DUNGEON_CONFIG = {
       { species: 19, level: 15, hpMultiplier: 1 }
     ]
   },
+  endlessFlame: {
+    number: "09",
+    category: "general",
+    unlockAfter: "persistentHappiness",
+    name: "延々と炎炎",
+    baseExperience: 40,
+    specialExperienceMultiplier: 1,
+    requestReferenceStar: 35,
+    requestTables: [
+      {
+        name: "A",
+        baseRate: 65,
+        monsters: [
+          { species: 26, level: 9, weight: 1 },
+          { species: 13, level: 12, weight: 1 }
+        ]
+      },
+      {
+        name: "B",
+        baseRate: 30,
+        monsters: [
+          { species: 26, level: 12, weight: 1 },
+          { species: 22, level: 14, weight: 1 }
+        ]
+      },
+      {
+        name: "C",
+        baseRate: 5,
+        monsters: [{ species: 32, level: 15, weight: 1 }]
+      }
+    ],
+    rushes: [
+      { species: [7, 13, 13], level: 15, hpMultiplier: 1 },
+      { species: [26, 13], level: 15, hpMultiplier: 1 },
+      { species: [26, 22, 22], level: 17, hpMultiplier: 1 }
+    ],
+    bosses: [
+      { species: 22, level: 18, hpMultiplier: 1 },
+      { species: 22, level: 18, hpMultiplier: 1 },
+      { species: 32, level: 20, hpMultiplier: 1 }
+    ]
+  },
   trial2: {
     number: "Lv2",
     category: "trial",
@@ -462,6 +511,50 @@ const DUNGEON_CONFIG = {
       { species: 2, level: 15, hpMultiplier: 1 },
       { species: 18, level: 18, hpMultiplier: 1 }
     ]
+  },
+  trial6: {
+    number: "Lv6",
+    category: "trial",
+    requiredPlayerLevel: 5,
+    name: "昇格戦 Lv6",
+    baseExperience: 35,
+    rewardPlayerLevel: 6,
+    rushes: [
+      { species: [26, 26, 26], level: 15, hpMultiplier: 1 },
+      { species: [31, 31, 31], level: 16, hpMultiplier: 1 },
+      { species: [29, 19, 29], level: 18, hpMultiplier: 1 }
+    ],
+    bosses: [
+      { species: 30, level: 22, hpMultiplier: 1, switchAtLowHp: true },
+      { species: 19, level: 19, hpMultiplier: 1 },
+      { species: 32, level: 20, hpMultiplier: 1 }
+    ]
+  },
+  challengerTakashi: {
+    number: "SP1",
+    category: "special",
+    requiredPlayerLevel: 5,
+    name: "モンスター使いタカシ",
+    baseExperience: 40,
+    rushes: [],
+    bosses: [
+      { species: 21, level: 16, hpMultiplier: 1 },
+      { species: 27, level: 19, hpMultiplier: 1 },
+      { species: 25, level: 24, hpMultiplier: 1 }
+    ]
+  },
+  monsterMasterMinato: {
+    number: "SP2",
+    category: "special",
+    requiredPlayerLevel: 5,
+    name: "モンスターマスター ミナト",
+    baseExperience: 60,
+    rushes: [],
+    bosses: [
+      { species: 18, level: 26, hpMultiplier: 1 },
+      { species: 14, level: 30, hpMultiplier: 1 },
+      { species: 13, level: 32, hpMultiplier: 1 }
+    ]
   }
 };
 const RANK_EXPERIENCE_MULTIPLIERS = {
@@ -483,8 +576,8 @@ const DAMAGE_CONFIG = {
 };
 const TYPE_EFFECTIVENESS = {
   "赤": { strong: ["緑", "白"], weak: ["青", "黒"] },
-  "緑": { strong: ["赤", "白"], weak: ["赤", "黒"] },
-  "青": { strong: ["青", "白"], weak: ["緑", "黒"] },
+  "緑": { strong: ["青", "白"], weak: ["赤", "黒"] },
+  "青": { strong: ["赤", "白"], weak: ["緑", "黒"] },
   "白": { strong: ["黒", "無"], weak: ["赤", "緑", "青"] },
   "黒": { strong: ["赤", "緑", "青"], weak: ["白"] },
   "無": { strong: [], weak: ["白"] }
@@ -508,9 +601,14 @@ const state = {
   collectionAttributeFilter: "all",
   partyPickerSort: "newest",
   partyPickerAttributeFilter: "all",
+  profilePickerSort: "newest",
+  profilePickerAttributeFilter: "all",
+  pairPickerSort: "newest",
+  pairPickerAttributeFilter: "all",
   pairBaseId: null,
   pairPartnerId: null,
   pairPickerMode: "base",
+  pendingPairMonsterId: null,
   pendingPairResult: null,
   pairTrainingTimers: [],
   outgoingCandidates: [],
@@ -607,12 +705,15 @@ function cacheElements() {
     "monsterHomePanel", "dungeonHomePanel", "trainingHomePanel", "matchHomePanel", "shopHomePanel",
     "pairBaseSlot", "pairPartnerSlot", "pairTrainingPreview", "pairTrainingStart",
     "pairPickerDialog", "pairPickerTitle", "pairPickerCopy", "pairPickerRoster", "closePairPicker",
+    "pairPickerSort", "pairPickerAttributeFilter",
+    "pairActionDialog", "pairActionName", "pairActionMonster", "pairActionReason",
+    "closePairAction", "pairActionDetailButton", "pairActionSelectButton",
     "pairEvolutionDialog", "pairEvolutionTitle", "pairEvolutionTarget",
     "declinePairEvolution", "acceptPairEvolution",
     "pairTrainingOverlay", "pairTrainingBaseMonster", "pairTrainingPartnerMonster",
     "pairTrainingStageLabel", "pairResultDialog", "pairResultMonster",
     "pairResultStats", "pairResultGoodbye", "closePairResult",
-    "dungeonCategoryTabs", "generalDungeonList", "trialDungeonList",
+    "dungeonCategoryTabs", "generalDungeonList", "trialDungeonList", "specialDungeonList",
     "monsterTabButton", "dungeonTabButton", "trainingTabButton", "matchTabButton", "shopTabButton",
     "shopGold", "shopCageCount", "buyCageButton", "shopCageFItem", "shopCageFCount", "buyCageFButton",
     "shopFeedback",
@@ -642,6 +743,7 @@ function cacheElements() {
     "profileDialog", "closeProfileDialog", "playerNameInput", "profileEditorSlots",
     "saveProfileButton", "profilePickerDialog", "profilePickerTitle",
     "closeProfilePicker", "profilePickerRoster",
+    "profilePickerSort", "profilePickerAttributeFilter",
     "cageSelectDialog", "closeCageSelect", "standardCageChoice", "fCageChoice",
     "outgoingCageCount", "outgoingCageFCount", "confirmOutgoingApplication",
     "catalogMatchOverlay", "catalogMatchMonster", "catalogMatchStageTitle", "catalogMatchStageCopy",
@@ -992,8 +1094,8 @@ function normalAttack(attributeName) {
     name: "アタック",
     attribute: attributeName,
     gauge: 0,
-    multiplier: 1,
-    effect: "使用者の属性で通常攻撃"
+    multiplier: NORMAL_ATTACK_MULTIPLIER,
+    effect: "使用者の属性で0.5倍ダメージ"
   };
 }
 
@@ -1142,6 +1244,11 @@ function hydrateMonster(savedMonster) {
     hornTop: savedMonster.hornTop || "16px"
   };
   const primaryLeftMove = monster.leftMoves[0] ?? fallbackLeftMove;
+  if (monster.rightMove === "アタック") {
+    monster.rightMoveMultiplier = NORMAL_ATTACK_MULTIPLIER;
+    monster.rightMoveGauge = 0;
+    monster.rightMoveEffect = "使用者の属性で0.5倍ダメージ";
+  }
   if (primaryLeftMove) {
     monster.leftMove = savedMonster.leftMove || primaryLeftMove.name;
     monster.leftMoveMultiplier = savedMonster.leftMoveMultiplier ?? primaryLeftMove.multiplier;
@@ -1175,6 +1282,10 @@ function createSaveData() {
     collectionAttributeFilter: state.collectionAttributeFilter,
     partyPickerSort: state.partyPickerSort,
     partyPickerAttributeFilter: state.partyPickerAttributeFilter,
+    profilePickerSort: state.profilePickerSort,
+    profilePickerAttributeFilter: state.profilePickerAttributeFilter,
+    pairPickerSort: state.pairPickerSort,
+    pairPickerAttributeFilter: state.pairPickerAttributeFilter,
     outgoingCandidates: state.outgoingCandidates.map(serializeMonster),
     outgoingGeneratedAt: state.outgoingGeneratedAt,
     discoveredSpecies: [...state.discoveredSpecies],
@@ -1319,6 +1430,10 @@ function applySaveData(rawSave) {
   state.collectionAttributeFilter = saved.collectionAttributeFilter || "all";
   state.partyPickerSort = saved.partyPickerSort || "newest";
   state.partyPickerAttributeFilter = saved.partyPickerAttributeFilter || "all";
+  state.profilePickerSort = saved.profilePickerSort || "newest";
+  state.profilePickerAttributeFilter = saved.profilePickerAttributeFilter || "all";
+  state.pairPickerSort = saved.pairPickerSort || "newest";
+  state.pairPickerAttributeFilter = saved.pairPickerAttributeFilter || "all";
   state.outgoingCandidates = (saved.outgoingCandidates ?? []).map(hydrateMonster).filter(Boolean);
   state.outgoingGeneratedAt = Number(saved.outgoingGeneratedAt) || 0;
   state.discoveredSpecies = new Set(saved.discoveredSpecies ?? friends.map((monster) => monster.speciesNo));
@@ -1340,7 +1455,12 @@ function applySaveData(rawSave) {
   if (state.homeTab === "training" && state.playerLevel < 5) {
     state.homeTab = "monsters";
   }
-  state.dungeonCategory = saved.dungeonCategory === "trial" ? "trial" : "general";
+  state.dungeonCategory = ["general", "trial", "special"].includes(saved.dungeonCategory)
+    ? saved.dungeonCategory
+    : "general";
+  if (state.dungeonCategory === "special" && state.playerLevel < 5) {
+    state.dungeonCategory = "general";
+  }
   state.rushBattleSpeed = BATTLE_SPEED_OPTIONS.includes(Number(saved.rushBattleSpeed))
     ? Number(saved.rushBattleSpeed)
     : DEFAULT_BATTLE_SPEED;
@@ -1369,6 +1489,10 @@ function applySaveData(rawSave) {
   els.collectionAttributeFilter.value = state.collectionAttributeFilter;
   els.partyPickerSort.value = state.partyPickerSort;
   els.partyPickerAttributeFilter.value = state.partyPickerAttributeFilter;
+  els.profilePickerSort.value = state.profilePickerSort;
+  els.profilePickerAttributeFilter.value = state.profilePickerAttributeFilter;
+  els.pairPickerSort.value = state.pairPickerSort;
+  els.pairPickerAttributeFilter.value = state.pairPickerAttributeFilter;
   renderParty();
   setHomeTab(state.homeTab);
   updateResources();
@@ -1577,7 +1701,7 @@ function updateResources() {
     ? "一覧から選んでマッチ申請を送る"
     : "プレイヤーLv3で解放";
   els.outgoingCountLabel.textContent = outgoingUnlocked
-    ? `${3 + state.playerLevel}体`
+    ? `${Math.min(MAX_CATALOG_CANDIDATES, 3 + state.playerLevel)}体`
     : "Lv3";
   const trainingUnlocked = state.playerLevel >= 5;
   els.trainingTabButton.classList.toggle("locked", !trainingUnlocked);
@@ -1816,7 +1940,13 @@ function profileStarAverage() {
 function outgoingMatchRate(monster) {
   const averageStar = profileStarAverage();
   const opponentAverageStat = Math.max(1, monster.sp / 3);
-  return Math.min(100, Math.max(1, 40 * (averageStar / opponentAverageStat)));
+  const discoveredMultiplier = state.discoveredSpecies.has(monster.speciesNo)
+    ? 1
+    : UNDISCOVERED_MATCH_RATE_MULTIPLIER;
+  return Math.min(
+    100,
+    Math.max(1, 40 * (averageStar / opponentAverageStat) * discoveredMultiplier)
+  );
 }
 
 function outgoingDifficulty(rate) {
@@ -1829,14 +1959,27 @@ function outgoingDifficulty(rate) {
 
 function outgoingSpeciesPool() {
   const unlockedRankNames = new Set(unlockedRanksForPlayer().map((rank) => rank.name));
-  const unlockedSpecies = monsterSpecies.filter((species) => unlockedRankNames.has(species.rank));
+  const unlockedSpecies = monsterSpecies.filter((species) => (
+    unlockedRankNames.has(species.rank)
+      && species.catalogMatch !== false
+      && !CATALOG_EXCLUDED_SPECIES.has(species.no)
+  ));
   const discovered = unlockedSpecies.filter((species) => state.discoveredSpecies.has(species.no));
   if (Math.random() < 0.12 || discovered.length === 0) return unlockedSpecies;
   return discovered;
 }
 
+function outgoingLevelRange(playerLevel = state.playerLevel) {
+  const minimum = Math.max(1, 2 * playerLevel - 3);
+  return {
+    minimum,
+    maximum: minimum + 5
+  };
+}
+
 function generateOutgoingCandidates() {
-  const count = 3 + state.playerLevel;
+  const count = Math.min(MAX_CATALOG_CANDIDATES, 3 + state.playerLevel);
+  const levelRange = outgoingLevelRange();
   const usedSpecies = new Set();
   state.outgoingCandidates = Array.from({ length: count }, () => {
     let pool = outgoingSpeciesPool().filter((species) => !usedSpecies.has(species.no));
@@ -1846,7 +1989,7 @@ function generateOutgoingCandidates() {
     }
     const species = pick(pool);
     usedSpecies.add(species.no);
-    const level = randomInt(1, Math.max(1, state.playerLevel));
+    const level = randomInt(levelRange.minimum, levelRange.maximum);
     return createMonster(0, species.no, level);
   });
   state.outgoingGeneratedAt = Date.now();
@@ -1871,6 +2014,7 @@ function renderMatchProfile() {
 
 function outgoingCandidateMarkup(monster) {
   const rate = outgoingMatchRate(monster);
+  const undiscovered = !state.discoveredSpecies.has(monster.speciesNo);
   const profileReady = profileMonsters().length === 3;
   const canApply = profileReady
     && state.catalogHearts > 0
@@ -1887,6 +2031,7 @@ function outgoingCandidateMarkup(monster) {
         <div class="outgoing-monster-title">
           <strong>${monster.name}</strong>
           <i class="inline-rank" style="${rankStyle(monster.rank)}">${monster.rank.name}</i>
+          ${undiscovered ? '<i class="catalog-undiscovered">未発見</i>' : ""}
         </div>
         <span class="sp-chip">SP ${monster.sp}</span>
       </div>
@@ -2310,8 +2455,8 @@ function pairPickerCardMarkup(monster, mode) {
   if (tooLow) reason = "Lv10で解放";
   else if (isSelf) reason = "ベース選択中";
   return `
-    <button class="monster-list-card pair-picker-card${evolution ? " pair-evolution-ready" : ""}"
-      data-pair-monster-id="${monster.id}" type="button" ${disabled ? "disabled" : ""}>
+    <button class="monster-list-card pair-picker-card${evolution ? " pair-evolution-ready" : ""}${disabled ? " unavailable" : ""}"
+      data-pair-monster-id="${monster.id}" type="button">
       <span class="monster-list-visual" style="--list-bg:${monster.attr.bg}">
         <span class="mini-monster" style="${monsterStyle(monster)}"></span>
       </span>
@@ -2340,10 +2485,14 @@ function openPairPicker(mode) {
   els.pairPickerCopy.textContent = mode === "base"
     ? "Lv10以上のベースモンスターを選択してください。"
     : "Lv10以上のペア相手を選択してください。パーティー・プロフィール使用中でも選べます。";
-  els.pairPickerRoster.innerHTML = state.friends.length
-    ? state.friends.map((monster) => pairPickerCardMarkup(monster, mode)).join("")
+  const monsters = getFilteredSortedFriends(
+    state.pairPickerSort,
+    state.pairPickerAttributeFilter
+  );
+  els.pairPickerRoster.innerHTML = monsters.length
+    ? monsters.map((monster) => pairPickerCardMarkup(monster, mode)).join("")
     : "<p class=\"collection-empty\">仲間モンスターがいません。</p>";
-  els.pairPickerDialog.showModal();
+  if (!els.pairPickerDialog.open) els.pairPickerDialog.showModal();
 }
 
 function selectPairMonster(monsterId) {
@@ -2358,6 +2507,45 @@ function selectPairMonster(monsterId) {
   }
   els.pairPickerDialog.close();
   renderPairTraining();
+}
+
+function openPairAction(monsterId) {
+  const monster = state.friends.find((friend) => friend.id === monsterId);
+  if (!monster) return;
+  state.pendingPairMonsterId = monster.id;
+  const isSelf = monster.id === state.pairBaseId && state.pairPickerMode === "partner";
+  const tooLow = monster.level < 10;
+  els.pairActionName.textContent = monster.name;
+  els.pairActionMonster.innerHTML = `
+    <span class="mini-monster" style="${monsterStyle(monster)}"></span>
+    <span><strong>${monster.name}</strong><small>Lv ${monster.level} / SP ${monster.sp}</small></span>`;
+  els.pairActionReason.textContent = tooLow
+    ? "Lv10以上でペアトレできます。"
+    : isSelf
+      ? "ベースと同じモンスターはペア相手に選べません。"
+      : "このモンスターを選択しますか？";
+  els.pairActionSelectButton.disabled = tooLow || isSelf;
+  els.pairActionDialog.showModal();
+}
+
+function closePairAction() {
+  state.pendingPairMonsterId = null;
+  if (els.pairActionDialog.open) els.pairActionDialog.close();
+}
+
+function showPairActionDetail() {
+  const monster = state.friends.find((friend) => friend.id === state.pendingPairMonsterId);
+  if (!monster) return;
+  els.pairActionDialog.close();
+  openMonsterDetail(monster, "pairView");
+}
+
+function confirmPairActionSelection() {
+  const monsterId = state.pendingPairMonsterId;
+  if (!monsterId || els.pairActionSelectButton.disabled) return;
+  els.pairActionDialog.close();
+  state.pendingPairMonsterId = null;
+  selectPairMonster(monsterId);
 }
 
 function clearPairTrainingTimers() {
@@ -2536,7 +2724,7 @@ function renderHomeTab() {
 }
 
 function isDungeonUnlocked(dungeon) {
-  if (dungeon.category === "trial") {
+  if (dungeon.category === "trial" || dungeon.category === "special") {
     return state.playerLevel >= (dungeon.requiredPlayerLevel ?? 1);
   }
   return !dungeon.unlockAfter || state.clearedDungeons.has(dungeon.unlockAfter);
@@ -2544,17 +2732,25 @@ function isDungeonUnlocked(dungeon) {
 
 function dungeonCardMarkup(dungeonId, dungeon) {
   const isTrial = dungeon.category === "trial";
+  const isSpecial = dungeon.category === "special";
   const rushCount = dungeon.rushes.length;
   const bossCount = dungeon.bosses.length;
-  const numberLabel = isTrial ? dungeon.number : String(dungeon.number).padStart(2, "0");
+  const numberLabel = isTrial || isSpecial
+    ? dungeon.number
+    : String(dungeon.number).padStart(2, "0");
   const tutorialClass = dungeonId === "warawara" ? " tutorial-dungeon-target" : "";
+  const categoryLabel = isTrial
+    ? "PROMOTION TRIAL"
+    : isSpecial
+      ? "CHALLENGER"
+      : "DUNGEON";
   return `
     <button class="dungeon-card${tutorialClass}" data-dungeon-id="${dungeonId}" type="button">
-      <span class="dungeon-art ${isTrial ? "trial-art" : "forest-art"}">${numberLabel}</span>
+      <span class="dungeon-art ${isTrial ? "trial-art" : isSpecial ? "special-art" : "forest-art"}">${numberLabel}</span>
       <span class="dungeon-copy">
-        <small>${isTrial ? "PROMOTION TRIAL" : "DUNGEON"} ${numberLabel}</small>
+        <small>${categoryLabel} ${numberLabel}</small>
         <strong>${dungeon.name}</strong>
-        <span>基礎EXP ${dungeon.baseExperience} / ラッシュ${rushCount}戦 / ボス${bossCount}体</span>
+        <span>基礎EXP ${dungeon.baseExperience} / ${rushCount ? `ラッシュ${rushCount}戦 / ` : ""}ガチ${bossCount}体</span>
         ${isTrial ? `<b>報酬 プレイヤーLv${dungeon.rewardPlayerLevel}</b>` : ""}
       </span>
       <span aria-hidden="true">›</span>
@@ -2566,8 +2762,18 @@ function renderDungeonLists() {
   const generalDungeons = entries.filter(([, dungeon]) => (
     dungeon.category === "general" && isDungeonUnlocked(dungeon)
   ));
-  const trialDungeons = entries.filter(([, dungeon]) => (
-    dungeon.category === "trial" && isDungeonUnlocked(dungeon)
+  const trialDungeons = entries.filter(([id, dungeon]) => (
+    dungeon.category === "trial"
+      && isDungeonUnlocked(dungeon)
+      && !state.clearedDungeons.has(id)
+  ));
+  const clearedTrials = entries.filter(([id, dungeon]) => (
+    dungeon.category === "trial"
+      && isDungeonUnlocked(dungeon)
+      && state.clearedDungeons.has(id)
+  ));
+  const specialDungeons = entries.filter(([, dungeon]) => (
+    dungeon.category === "special" && isDungeonUnlocked(dungeon)
   ));
 
   els.generalDungeonList.innerHTML = generalDungeons
@@ -2575,11 +2781,26 @@ function renderDungeonLists() {
     .join("");
   els.trialDungeonList.innerHTML = trialDungeons.length
     ? trialDungeons.map(([id, dungeon]) => dungeonCardMarkup(id, dungeon)).join("")
-    : `<p class="dungeon-list-empty">挑戦できる試練はまだありません</p>`;
+    : `<p class="dungeon-list-empty">未クリアの試練はありません</p>`;
+  if (clearedTrials.length) {
+    els.trialDungeonList.insertAdjacentHTML("beforeend", `
+      <details class="cleared-trials">
+        <summary>クリア済 <b>${clearedTrials.length}</b></summary>
+        <div class="cleared-trial-list">
+          ${clearedTrials.map(([id, dungeon]) => dungeonCardMarkup(id, dungeon)).join("")}
+        </div>
+      </details>`);
+  }
+  els.specialDungeonList.innerHTML = specialDungeons.length
+    ? specialDungeons.map(([id, dungeon]) => dungeonCardMarkup(id, dungeon)).join("")
+    : `<p class="dungeon-list-empty">スペシャルはプレイヤーLv5で解放されます</p>`;
 
-  const showGeneral = state.dungeonCategory === "general";
-  els.generalDungeonList.hidden = !showGeneral;
-  els.trialDungeonList.hidden = showGeneral;
+  els.generalDungeonList.hidden = state.dungeonCategory !== "general";
+  els.trialDungeonList.hidden = state.dungeonCategory !== "trial";
+  els.specialDungeonList.hidden = state.dungeonCategory !== "special";
+  const specialButton = els.dungeonCategoryTabs.querySelector('[data-dungeon-category="special"]');
+  specialButton.classList.toggle("locked", state.playerLevel < 5);
+  specialButton.querySelector(".category-lock-label").hidden = state.playerLevel >= 5;
   els.dungeonCategoryTabs.querySelectorAll("[data-dungeon-category]").forEach((button) => {
     button.classList.toggle(
       "active",
@@ -2779,14 +3000,18 @@ function openProfileEditor() {
 function openProfilePicker(slotIndex) {
   state.editingProfileSlot = slotIndex;
   els.profilePickerTitle.textContent = `プロフィール${slotIndex + 1}を選択`;
-  els.profilePickerRoster.innerHTML = state.friends.map((monster) => (
+  const monsters = getFilteredSortedFriends(
+    state.profilePickerSort,
+    state.profilePickerAttributeFilter
+  );
+  els.profilePickerRoster.innerHTML = monsters.map((monster) => (
     monsterListCardMarkup(
       monster,
       "profile-monster-id",
       state.editingProfileMonsterIds.indexOf(monster.id)
     )
-  )).join("");
-  els.profilePickerDialog.showModal();
+  )).join("") || '<p class="collection-empty">該当するモンスターはいません。</p>';
+  if (!els.profilePickerDialog.open) els.profilePickerDialog.showModal();
 }
 
 function selectProfileMonster(monsterId) {
@@ -2835,6 +3060,7 @@ function dungeonEnemyCardMarkup(speciesNo, level, options = {}) {
     ? `HP ${Math.round(options.hpMultiplier * 100)}%`
     : "";
   const talentText = options.talent ? `才能 ${options.talent}` : "";
+  const behaviorText = options.switchAtLowHp ? "ピンチ時交代" : "";
   return `
     <article class="dungeon-enemy-card">
       <span class="dungeon-enemy-art" style="--list-bg:${attr.bg}">
@@ -2847,7 +3073,9 @@ function dungeonEnemyCardMarkup(speciesNo, level, options = {}) {
           <i class="inline-rank" style="${rankStyle(rank)}">${rank.name}</i>
           <i class="attribute-chip" style="--attr-bg:${attr.bg};--attr-color:${attr.color}">${attr.name}</i>
         </span>
-        ${hpText || talentText ? `<small>${[hpText, talentText].filter(Boolean).join(" / ")}</small>` : ""}
+        ${hpText || talentText || behaviorText
+          ? `<small>${[hpText, talentText, behaviorText].filter(Boolean).join(" / ")}</small>`
+          : ""}
       </span>
     </article>`;
 }
@@ -2919,8 +3147,8 @@ function openDungeonDetails() {
   const bosses = `
     <section class="dungeon-battle-section boss">
       <div class="dungeon-battle-heading">
-        <span>BOSS</span>
-        <strong>ボスバトル</strong>
+        <span>GACHI</span>
+        <strong>ガチバトル</strong>
       </div>
       <div class="dungeon-enemy-grid">${dungeonBossSummaryMarkup(dungeon)}</div>
     </section>`;
@@ -3479,7 +3707,7 @@ function updateBattleSpeedButton() {
   );
   els.battleSpeedButton.setAttribute(
     "aria-label",
-    `${mode === "rush" ? "ラッシュ" : "ボス"}バトル速度 ${speed}倍`
+    `${mode === "rush" ? "ラッシュバトル" : "ガチバトル"}速度 ${speed}倍`
   );
 }
 
@@ -3543,21 +3771,26 @@ function startBattleRound() {
     startRushBattle();
     return;
   }
-  state.bossQueue = dungeon.bosses.map((bossConfig) => configuredEnemy(
-    bossConfig.species,
-    bossConfig.level,
-    bossConfig.hpMultiplier,
-    true,
-    {
-      iv: bossConfig.iv ?? dungeon.enemyIv,
-      ivRange: bossConfig.ivRange ?? dungeon.enemyIvRange,
-      ...(!(bossConfig.iv ?? dungeon.enemyIv)
-        && !(bossConfig.ivRange ?? dungeon.enemyIvRange)
-        ? { fixedIv: 0 }
-        : {}),
-      talent: bossConfig.talent ?? 0
-    }
-  ));
+  state.bossQueue = dungeon.bosses.map((bossConfig) => {
+    const fighter = configuredEnemy(
+      bossConfig.species,
+      bossConfig.level,
+      bossConfig.hpMultiplier,
+      true,
+      {
+        iv: bossConfig.iv ?? dungeon.enemyIv,
+        ivRange: bossConfig.ivRange ?? dungeon.enemyIvRange,
+        ...(!(bossConfig.iv ?? dungeon.enemyIv)
+          && !(bossConfig.ivRange ?? dungeon.enemyIvRange)
+          ? { fixedIv: 0 }
+          : {}),
+        talent: bossConfig.talent ?? 0
+      }
+    );
+    fighter.switchAtLowHp = Boolean(bossConfig.switchAtLowHp);
+    fighter.pinchSwitchUsed = false;
+    return fighter;
+  });
   state.defeatedBosses = [];
   state.enemies = [state.bossQueue.shift()];
   state.allyPartyGauge = 0;
@@ -3576,7 +3809,7 @@ function startBattleRound() {
   els.bossBattleArea.hidden = false;
   clearBattleLog(els.battleLog);
   renderBattle();
-  appendBattleLog("ボスバトル開始", "section");
+  appendBattleLog("ガチバトル開始", "section");
   appendBattleLog(`味方パーティー：${state.allies.map((fighter) => fighter.name).join(" / ")}`, "lineup ally");
   appendBattleLog(`敵パーティー：${state.enemies.map((fighter) => fighter.name).join(" / ")}`, "lineup enemy");
   applyBattleEntryTraits("boss");
@@ -3831,7 +4064,7 @@ function resolveRushBattle() {
     const finalRushCleared = state.battleIndex + 1 === rushBattleCount();
     appendBattleLog(
       finalRushCleared
-        ? "ラッシュ突破。ボスの気配がする"
+        ? "ラッシュ突破。ガチバトルが始まる"
         : "ラッシュ突破。次の群れへ",
       "result"
     );
@@ -3883,8 +4116,8 @@ function renderBattleDots() {
 }
 
 function renderBattle() {
-  els.testClearButton.textContent = "TEST: ボス撃破";
-  els.battleKind.textContent = "BOSS BATTLE";
+  els.testClearButton.textContent = "TEST: ガチバトル突破";
+  els.battleKind.textContent = "GACHI BATTLE";
   const dungeon = currentDungeon();
   els.battleTitle.textContent = `${dungeon.name}のヌシ`;
   renderBattleDots();
@@ -4294,6 +4527,34 @@ function useBattleMoveFromButton(direction) {
   useMove(direction);
 }
 
+function switchEnemyAtLowHp() {
+  const enemy = state.enemies[0];
+  if (
+    !enemy
+    || !enemy.switchAtLowHp
+    || enemy.pinchSwitchUsed
+    || enemy.hp <= 0
+    || enemy.hp / enemy.maxHp > 0.25
+    || state.bossQueue.length === 0
+  ) return false;
+
+  enemy.pinchSwitchUsed = true;
+  const nextEnemy = state.bossQueue.shift();
+  state.bossQueue.push(enemy);
+  state.enemies = [nextEnemy];
+  resetFighterStatChanges(enemy);
+  appendBattleLog(
+    `${fighterLogName(enemy)}はピンチになり、${fighterLogName(nextEnemy)}と交代した`,
+    "section enemy"
+  );
+  triggerEntryTrait(nextEnemy, [state.allies[state.activeAllyIndex]]);
+  state.battleLocked = false;
+  renderBattle();
+  renderBattleHp();
+  setBattleMessage(`相手が${nextEnemy.name}に交代。あなたのターン`);
+  return true;
+}
+
 function useMove(direction) {
   if (state.battleLocked) return;
   const ally = state.allies[state.activeAllyIndex];
@@ -4394,6 +4655,8 @@ function useMove(direction) {
           renderBench();
           setBattleMessage("火傷で倒れた。次に出すモンスターを選んでください");
         }
+      } else if (switchEnemyAtLowHp()) {
+        return;
       } else {
         battleTimeout(enemyTurn, 700, "boss");
       }
@@ -4491,6 +4754,8 @@ function enemyTurn() {
         renderBench();
         setBattleMessage("味方：次に出すモンスターを選んでください");
       }, 700, "boss");
+    } else if (switchEnemyAtLowHp()) {
+      return;
     } else {
       battleTimeout(() => {
         state.battleLocked = false;
@@ -4553,11 +4818,11 @@ function winBattleRound() {
   const battleGold = calculateBattleGold(defeatedBosses);
   state.battleIndex += 1;
   if (state.battleIndex >= totalBattleCount()) {
-    appendBattleLog("ボスバトル勝利", "result");
+    appendBattleLog("ガチバトル勝利", "result");
     state.gold += battleGold;
     appendBattleLog(`${battleGold} Goldを獲得した`, "reward");
     updateResources();
-    showExperienceReward(experienceAwards, "ボス撃破", () => finishDungeon(true));
+    showExperienceReward(experienceAwards, "ガチバトル勝利", () => finishDungeon(true));
   } else {
     setBattleMessage("戦闘勝利。次の区画へ進む");
     battleTimeout(startBattleRound, 850, "boss");
@@ -5368,8 +5633,24 @@ function bindEvents() {
       return;
     }
     const button = event.target.closest("[data-pair-monster-id]");
-    if (button && !button.disabled) selectPairMonster(button.dataset.pairMonsterId);
+    if (button) openPairAction(button.dataset.pairMonsterId);
   });
+  els.pairPickerSort.addEventListener("change", () => {
+    state.pairPickerSort = els.pairPickerSort.value;
+    openPairPicker(state.pairPickerMode);
+    scheduleAutosave();
+  });
+  els.pairPickerAttributeFilter.addEventListener("change", () => {
+    state.pairPickerAttributeFilter = els.pairPickerAttributeFilter.value;
+    openPairPicker(state.pairPickerMode);
+    scheduleAutosave();
+  });
+  els.closePairAction.addEventListener("click", closePairAction);
+  els.pairActionDialog.addEventListener("click", (event) => {
+    if (clickedDialogBackdrop(event, els.pairActionDialog)) closePairAction();
+  });
+  els.pairActionDetailButton.addEventListener("click", showPairActionDetail);
+  els.pairActionSelectButton.addEventListener("click", confirmPairActionSelection);
   els.declinePairEvolution.addEventListener("click", () => finishPairTraining(false));
   els.acceptPairEvolution.addEventListener("click", () => finishPairTraining(true));
   els.closePairResult.addEventListener("click", () => els.pairResultDialog.close());
@@ -5379,6 +5660,7 @@ function bindEvents() {
   els.dungeonCategoryTabs.addEventListener("click", (event) => {
     const button = event.target.closest("[data-dungeon-category]");
     if (!button) return;
+    if (button.dataset.dungeonCategory === "special" && state.playerLevel < 5) return;
     state.dungeonCategory = button.dataset.dungeonCategory;
     renderDungeonLists();
     scheduleAutosave();
@@ -5501,6 +5783,16 @@ function bindEvents() {
   els.profilePickerRoster.addEventListener("click", (event) => {
     const button = event.target.closest("[data-profile-monster-id]");
     if (button) selectProfileMonster(button.dataset.profileMonsterId);
+  });
+  els.profilePickerSort.addEventListener("change", () => {
+    state.profilePickerSort = els.profilePickerSort.value;
+    openProfilePicker(state.editingProfileSlot);
+    scheduleAutosave();
+  });
+  els.profilePickerAttributeFilter.addEventListener("change", () => {
+    state.profilePickerAttributeFilter = els.profilePickerAttributeFilter.value;
+    openProfilePicker(state.editingProfileSlot);
+    scheduleAutosave();
   });
   els.saveProfileButton.addEventListener("click", saveProfile);
   els.outgoingMatchButton.addEventListener("click", openOutgoingMatch);
