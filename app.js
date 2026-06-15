@@ -99,6 +99,7 @@ const monsterRanks = [
 const MAX_FRIENDS = 100;
 const CAGE_PRICE = 100;
 const CAGE_F_PRICE = 300;
+const CAGE_E_PRICE = 700;
 const EXP_500_DRINK_PRICE = 200;
 const EXP_500_DRINK_AMOUNT = 500;
 const EXP_DRINK_PRICE = 1500;
@@ -110,7 +111,7 @@ const HEART_PLUS_PRICE = 2000;
 const MAX_CATALOG_HEARTS = 5;
 const CATALOG_HEART_RECOVERY_MS = 30 * 60 * 1000;
 const OUTGOING_MATCH_REFRESH_MS = 3 * 60 * 60 * 1000;
-const SAVE_VERSION = 7;
+const SAVE_VERSION = 8;
 const AUTOSAVE_KEY = "monmachi.save.autosave";
 const MANUAL_SAVE_PREFIX = "monmachi.save.slot.";
 const MANUAL_SAVE_SLOT_COUNT = 5;
@@ -161,22 +162,27 @@ function cageCanHold(cageType, monster) {
 }
 
 function cageCount(cageType) {
+  if (cageType === "E") return state.cagesE;
   return cageType === "F" ? state.cagesF : state.cages;
 }
 
 function hasCompatibleCage(monster) {
   return (state.cages > 0 && cageCanHold("G", monster))
-    || (state.cagesF > 0 && cageCanHold("F", monster));
+    || (state.cagesF > 0 && cageCanHold("F", monster))
+    || (state.cagesE > 0 && cageCanHold("E", monster));
 }
 
 function preferredCageType(monster) {
   if (state.cages > 0 && cageCanHold("G", monster)) return "G";
   if (state.cagesF > 0 && cageCanHold("F", monster)) return "F";
+  if (state.cagesE > 0 && cageCanHold("E", monster)) return "E";
   return null;
 }
 
 function consumeCage(cageType) {
-  if (cageType === "F") {
+  if (cageType === "E") {
+    state.cagesE = Math.max(0, state.cagesE - 1);
+  } else if (cageType === "F") {
     state.cagesF = Math.max(0, state.cagesF - 1);
   } else {
     state.cages = Math.max(0, state.cages - 1);
@@ -589,6 +595,7 @@ const state = {
   gold: 320,
   cages: 1,
   cagesF: 0,
+  cagesE: 0,
   exp500Drinks: 0,
   expDrinks: 0,
   expMists: 0,
@@ -716,12 +723,13 @@ function cacheElements() {
     "dungeonCategoryTabs", "generalDungeonList", "trialDungeonList", "specialDungeonList",
     "monsterTabButton", "dungeonTabButton", "trainingTabButton", "matchTabButton", "shopTabButton",
     "shopGold", "shopCageCount", "buyCageButton", "shopCageFItem", "shopCageFCount", "buyCageFButton",
+    "shopCageEItem", "shopCageECount", "buyCageEButton",
     "shopFeedback",
     "shopExpDrinkItem", "shopExp500DrinkCount", "buyExp500DrinkButton", "useExp500DrinkButton",
     "shopExp3000DrinkItem", "shopExpDrinkCount", "buyExpDrinkButton", "useExpDrinkButton",
     "shopExpMistItem", "shopExpMistCount", "buyExpMistButton", "useExpMistButton",
-    "shopCatalogChangeCount", "buyCatalogChangeButton", "useCatalogChangeButton",
-    "buyHeartPlusButton",
+    "shopCatalogChangeItem", "shopCatalogChangeCount", "buyCatalogChangeButton", "useCatalogChangeButton",
+    "shopHeartPlusItem", "buyHeartPlusButton",
     "expDrinkDialog", "closeExpDrinkDialog", "expDrinkRoster",
     "expDrinkDialogCopy", "expDrinkDialogStatus", "expDrinkFeedback",
     "collectionCount", "collectionGrid", "collectionSort", "collectionAttributeFilter",
@@ -744,20 +752,20 @@ function cacheElements() {
     "saveProfileButton", "profilePickerDialog", "profilePickerTitle",
     "closeProfilePicker", "profilePickerRoster",
     "profilePickerSort", "profilePickerAttributeFilter",
-    "cageSelectDialog", "closeCageSelect", "standardCageChoice", "fCageChoice",
-    "outgoingCageCount", "outgoingCageFCount", "confirmOutgoingApplication",
+    "cageSelectDialog", "closeCageSelect", "standardCageChoice", "fCageChoice", "eCageChoice",
+    "outgoingCageCount", "outgoingCageFCount", "outgoingCageECount", "confirmOutgoingApplication",
     "catalogMatchOverlay", "catalogMatchMonster", "catalogMatchStageTitle", "catalogMatchStageCopy",
     "roster", "diveButton", "battleKind", "battleTitle",
     "battleSpeedButton", "battleSpeedValue",
     "battleDots", "rushBattleArea", "rushEnemyHpList", "rushAllyHpList",
     "rushBattleLog", "bossBattleArea", "manualBattleField",
-    "enemyName", "enemyHp", "enemyGauge", "enemyGaugeValue",
-    "enemyMonster", "enemyStatusIcons", "allyName", "allyHp", "allyGauge", "allyGaugeValue",
+    "enemyName", "enemyHp", "enemyHpValue", "enemyGauge", "enemyGaugeValue",
+    "enemyMonster", "enemyStatusIcons", "allyName", "allyHp", "allyHpValue", "allyGauge", "allyGaugeValue",
     "allyStatusIcons",
     "allyMonster", "leftMoveCallout", "rightMoveCallout",
     "leftMoveButton", "rightMoveButton", "leftMoveGuide", "rightMoveGuide",
     "leftMoveTooltip", "rightMoveTooltip",
-    "bench", "battleLog", "bossEffectText",
+    "bench", "replacementPrompt", "battleLog", "bossEffectText",
     "requestProgress", "card", "imagePanel", "monsterArt", "sp", "matchHp", "matchPower", "matchStar", "name",
     "levelBadge", "rankBadge", "attribute",
     "leftMove", "leftMove2", "leftMove2Button", "rightMove", "trait", "matchAbilityList", "matchAbilityInfo",
@@ -772,7 +780,7 @@ function cacheElements() {
     "detailIvHp", "detailIvAtk", "detailIvSense",
     "detailIvHpValue", "detailIvAtkValue", "detailIvSenseValue",
     "detailSelectActions", "confirmPartyMonster",
-    "openPairHistory", "detailPairHistoryCount", "pairHistoryDialog", "closePairHistory",
+    "openPairHistory", "pairHistoryDialog", "closePairHistory",
     "pairHistoryTitle", "pairHistoryCaption", "pairHistoryViewport",
     "matchOverlay", "matchMonster",
     "matchedName", "experienceOverlay", "experienceTitle", "experienceAmount",
@@ -959,12 +967,13 @@ function calculateDefeatExperience(enemyMonster, recipientMonster) {
 
 function calculatePartyExperience(defeatedEnemies) {
   const defeated = defeatedEnemies.filter((enemy) => !enemy.escaped);
-  return new Map(state.allies.map((fighter) => {
+  const partyIds = new Set(state.allies.map((fighter) => fighter.id));
+  return new Map(state.friends.map((monster) => {
     const amount = defeated.reduce(
-      (total, enemy) => total + calculateDefeatExperience(enemy.monster, fighter.monster),
+      (total, enemy) => total + calculateDefeatExperience(enemy.monster, monster),
       0
     );
-    return [fighter.id, amount];
+    return [monster.id, partyIds.has(monster.id) ? amount : Math.round(amount / 2)];
   }));
 }
 
@@ -1015,12 +1024,16 @@ function syncFighterAfterGrowth(fighter) {
 }
 
 function showExperienceReward(experienceAwards, title, onContinue) {
-  const rewards = state.allies.map((fighter) => {
-    const amount = experienceAwards.get(fighter.id) ?? 0;
-    const reward = grantExperience(fighter.monster, amount);
-    syncFighterAfterGrowth(fighter);
-    return { ...reward, amount };
+  const allyById = new Map(state.allies.map((fighter) => [fighter.id, fighter]));
+  const allRewards = state.friends.map((monster) => {
+    const amount = experienceAwards.get(monster.id) ?? 0;
+    const reward = grantExperience(monster, amount);
+    const fighter = allyById.get(monster.id);
+    if (fighter) syncFighterAfterGrowth(fighter);
+    return { ...reward, amount, party: Boolean(fighter) };
   });
+  const rewards = allRewards.filter((reward) => reward.party);
+  const reserveRewards = allRewards.filter((reward) => !reward.party && reward.amount > 0);
 
   els.experienceTitle.textContent = title;
   const awardedAmounts = rewards.map((reward) => reward.amount);
@@ -1029,6 +1042,9 @@ function showExperienceReward(experienceAwards, title, onContinue) {
   els.experienceAmount.textContent = minimumAward === maximumAward
     ? `各 +${minimumAward} EXP`
     : `${minimumAward}〜${maximumAward} EXP`;
+  if (reserveRewards.length) {
+    els.experienceAmount.textContent += ` / 仲間全員にも1/2`;
+  }
   els.experienceList.innerHTML = rewards.map((reward) => {
     const levelUp = reward.leveledUp
       ? `<div class="level-up-result">
@@ -1145,6 +1161,18 @@ function createMonster(boost = 0, speciesNo = null, levelOverride = null, option
   const selectedLeftMoves = randomSample(leftMoveCandidates, 2);
   const leftMove = selectedLeftMoves[0];
   const selectedPassive = passiveCandidates.length ? pick(passiveCandidates) : null;
+  const trainingBonusOption = options.trainingBonus ?? 0;
+  const trainingBonus = typeof trainingBonusOption === "number"
+    ? {
+        hp: trainingBonusOption,
+        power: trainingBonusOption,
+        star: trainingBonusOption
+      }
+    : {
+        hp: Number(trainingBonusOption.hp) || 0,
+        power: Number(trainingBonusOption.power) || 0,
+        star: Number(trainingBonusOption.star) || 0
+      };
   const monster = applyCalculatedStats({
     id: crypto.randomUUID(),
     speciesNo: species.no,
@@ -1160,11 +1188,7 @@ function createMonster(boost = 0, speciesNo = null, levelOverride = null, option
       power: species.power * rankScale.power,
       star: species.star * rankScale.star
     },
-    trainingBonus: {
-      hp: 0,
-      power: 0,
-      star: 0
-    },
+    trainingBonus,
     pairLineage: null,
     leftMove: leftMove.name,
     leftMoveMultiplier: leftMove.multiplier,
@@ -1270,6 +1294,7 @@ function createSaveData() {
     gold: state.gold,
     cages: state.cages,
     cagesF: state.cagesF,
+    cagesE: state.cagesE,
     exp500Drinks: state.exp500Drinks,
     expDrinks: state.expDrinks,
     expMists: state.expMists,
@@ -1356,6 +1381,9 @@ function migrateSaveData(savedData) {
   if (migrated.saveVersion < 7) {
     migrated.exp500Drinks = 0;
   }
+  if (migrated.saveVersion < 8) {
+    migrated.cagesE = 0;
+  }
   migrated.saveVersion = SAVE_VERSION;
   return migrated;
 }
@@ -1411,6 +1439,7 @@ function applySaveData(rawSave) {
   state.gold = Math.max(0, Number(saved.gold) || 0);
   state.cages = Math.max(0, Number(saved.cages) || 0);
   state.cagesF = Math.max(0, Number(saved.cagesF) || 0);
+  state.cagesE = Math.max(0, Number(saved.cagesE) || 0);
   state.exp500Drinks = Math.max(0, Number(saved.exp500Drinks) || 0);
   state.expDrinks = Math.max(0, Number(saved.expDrinks) || 0);
   state.expMists = Math.max(0, Number(saved.expMists) || 0);
@@ -1562,6 +1591,7 @@ function startTutorial() {
   state.gold = 320;
   state.cages = 1;
   state.cagesF = 0;
+  state.cagesE = 0;
   state.exp500Drinks = 0;
   state.expDrinks = 0;
   state.expMists = 0;
@@ -1606,6 +1636,7 @@ function beginTutorialRecruiting() {
 function afterTutorialPrinceMatched() {
   state.cages = 2;
   state.cagesF = 0;
+  state.cagesE = 0;
   state.requests = [];
   state.requestIndex = 0;
   state.tutorialStage = "recruitIntro";
@@ -1622,6 +1653,7 @@ function resetTutorialRecruitment() {
   state.gold = 320;
   state.cages = 2;
   state.cagesF = 0;
+  state.cagesE = 0;
   state.friends = prince ? [prince] : [];
   state.friendSequence = prince ? 1 : 0;
   if (prince) prince.acquiredOrder = 1;
@@ -1648,8 +1680,7 @@ function completeTutorialRecruitment() {
   showTutorialMessage(
     "ダンジョンに潜るとまたモンスターから\nマッチ申請が届くことがあるよ！",
     () => {
-      state.tutorialStage = "done";
-      els.tutorialSkipButton.hidden = true;
+      state.tutorialStage = "dungeonSelect";
       setHomeTab("dungeon");
       updateResources();
     },
@@ -1666,6 +1697,7 @@ function skipTutorial() {
   state.gold = 320;
   state.cages = 0;
   state.cagesF = 0;
+  state.cagesE = 0;
   state.exp500Drinks = 0;
   state.expDrinks = 0;
   state.expMists = 0;
@@ -1711,30 +1743,38 @@ function updateResources() {
   els.shopGold.textContent = state.gold;
   els.shopCageCount.textContent = state.cages;
   els.shopCageFCount.textContent = state.cagesF;
+  els.shopCageECount.textContent = state.cagesE;
   els.outgoingCageCount.textContent = state.cages;
   els.outgoingCageFCount.textContent = state.cagesF;
+  els.outgoingCageECount.textContent = state.cagesE;
   els.shopExp500DrinkCount.textContent = state.exp500Drinks;
   els.shopExpDrinkCount.textContent = state.expDrinks;
   els.shopExpMistCount.textContent = state.expMists;
   els.shopCatalogChangeCount.textContent = state.catalogChanges;
-  els.matchCageCount.textContent = `G ${state.cages} / F ${state.cagesF}`;
+  els.matchCageCount.textContent = `G ${state.cages} / F ${state.cagesF} / E ${state.cagesE}`;
   els.buyCageButton.disabled = state.gold < CAGE_PRICE;
   const cageFUnlocked = state.playerLevel >= 3;
+  const cageEUnlocked = state.playerLevel >= 5;
   const mistUnlocked = state.playerLevel >= 4;
-  const drinkUnlocked = state.playerLevel >= 7;
+  const drinkUnlocked = state.playerLevel >= 6;
+  const catalogItemsUnlocked = state.playerLevel >= 7;
   setShopItemLock(els.shopCageFItem, cageFUnlocked, 3);
+  setShopItemLock(els.shopCageEItem, cageEUnlocked, 5);
   setShopItemLock(els.shopExpMistItem, mistUnlocked, 4);
-  setShopItemLock(els.shopExp3000DrinkItem, drinkUnlocked, 7);
+  setShopItemLock(els.shopExp3000DrinkItem, drinkUnlocked, 6);
+  setShopItemLock(els.shopCatalogChangeItem, catalogItemsUnlocked, 7);
+  setShopItemLock(els.shopHeartPlusItem, catalogItemsUnlocked, 7);
   els.buyCageFButton.disabled = !cageFUnlocked || state.gold < CAGE_F_PRICE;
+  els.buyCageEButton.disabled = !cageEUnlocked || state.gold < CAGE_E_PRICE;
   els.buyExp500DrinkButton.disabled = state.gold < EXP_500_DRINK_PRICE;
   els.buyExpDrinkButton.disabled = !drinkUnlocked || state.gold < EXP_DRINK_PRICE;
   els.buyExpMistButton.disabled = !mistUnlocked || state.gold < EXP_MIST_PRICE;
   els.useExp500DrinkButton.disabled = state.exp500Drinks <= 0 || state.friends.length === 0;
   els.useExpDrinkButton.disabled = state.expDrinks <= 0 || state.friends.length === 0;
   els.useExpMistButton.disabled = state.expMists <= 0 || state.friends.length === 0;
-  els.buyCatalogChangeButton.disabled = state.gold < CATALOG_CHANGE_PRICE;
-  els.useCatalogChangeButton.disabled = state.catalogChanges <= 0;
-  els.buyHeartPlusButton.disabled = state.gold < HEART_PLUS_PRICE
+  els.buyCatalogChangeButton.disabled = !catalogItemsUnlocked || state.gold < CATALOG_CHANGE_PRICE;
+  els.useCatalogChangeButton.disabled = !catalogItemsUnlocked || state.catalogChanges <= 0;
+  els.buyHeartPlusButton.disabled = !catalogItemsUnlocked || state.gold < HEART_PLUS_PRICE
     || state.catalogHearts >= MAX_CATALOG_HEARTS;
   updateCatalogHeartDisplay();
   const requestMonster = state.requests[state.requestIndex];
@@ -2133,8 +2173,12 @@ function openCageSelection(monsterId) {
   if (!monster || !hasCompatibleCage(monster)) return;
   state.pendingOutgoingMonsterId = monsterId;
   state.selectedOutgoingCageType = preferredCageType(monster);
-  ["G", "F"].forEach((type) => {
-    const choice = type === "G" ? els.standardCageChoice : els.fCageChoice;
+  ["G", "F", "E"].forEach((type) => {
+    const choice = type === "G"
+      ? els.standardCageChoice
+      : type === "F"
+        ? els.fCageChoice
+        : els.eCageChoice;
     const available = cageCount(type) > 0 && cageCanHold(type, monster);
     const rate = Math.min(100, outgoingMatchRate(monster) * cageSuccessMultiplier(type, monster));
     choice.disabled = !available;
@@ -2739,19 +2783,23 @@ function dungeonCardMarkup(dungeonId, dungeon) {
     ? dungeon.number
     : String(dungeon.number).padStart(2, "0");
   const tutorialClass = dungeonId === "warawara" ? " tutorial-dungeon-target" : "";
+  const cleared = state.clearedDungeons.has(dungeonId);
+  const tutorialLocked = state.tutorialStage === "dungeonSelect" && dungeonId !== "warawara";
   const categoryLabel = isTrial
     ? "PROMOTION TRIAL"
     : isSpecial
       ? "CHALLENGER"
       : "DUNGEON";
   return `
-    <button class="dungeon-card${tutorialClass}" data-dungeon-id="${dungeonId}" type="button">
+    <button class="dungeon-card${tutorialClass}${cleared ? " cleared" : ""}${tutorialLocked ? " locked" : ""}"
+      data-dungeon-id="${dungeonId}" type="button" ${tutorialLocked ? "disabled" : ""}>
       <span class="dungeon-art ${isTrial ? "trial-art" : isSpecial ? "special-art" : "forest-art"}">${numberLabel}</span>
       <span class="dungeon-copy">
         <small>${categoryLabel} ${numberLabel}</small>
         <strong>${dungeon.name}</strong>
         <span>基礎EXP ${dungeon.baseExperience} / ${rushCount ? `ラッシュ${rushCount}戦 / ` : ""}ガチ${bossCount}体</span>
         ${isTrial ? `<b>報酬 プレイヤーLv${dungeon.rewardPlayerLevel}</b>` : ""}
+        ${cleared ? '<b class="dungeon-cleared-label">CLEAR</b>' : ""}
       </span>
       <span aria-hidden="true">›</span>
     </button>`;
@@ -2832,8 +2880,20 @@ function buyCageF() {
   updateResources();
 }
 
+function buyCageE() {
+  if (state.playerLevel < 5) return;
+  if (state.gold < CAGE_E_PRICE) {
+    els.shopFeedback.textContent = "Goldが足りません";
+    return;
+  }
+  state.gold -= CAGE_E_PRICE;
+  state.cagesE += 1;
+  els.shopFeedback.textContent = "モンスターケージEを1個購入しました";
+  updateResources();
+}
+
 function buyExpDrink() {
-  if (state.playerLevel < 7) return;
+  if (state.playerLevel < 6) return;
   if (state.gold < EXP_DRINK_PRICE) {
     els.shopFeedback.textContent = "ゴールドが足りません。";
     return;
@@ -2879,6 +2939,7 @@ function useExpMist() {
 }
 
 function buyCatalogChange() {
+  if (state.playerLevel < 7) return;
   if (state.gold < CATALOG_CHANGE_PRICE) {
     els.shopFeedback.textContent = "Goldが足りません。";
     return;
@@ -2890,7 +2951,7 @@ function buyCatalogChange() {
 }
 
 function useCatalogChange() {
-  if (state.catalogChanges <= 0) return;
+  if (state.playerLevel < 7 || state.catalogChanges <= 0) return;
   state.catalogChanges -= 1;
   generateOutgoingCandidates();
   els.shopFeedback.textContent = "カタログを更新しました。";
@@ -2898,6 +2959,7 @@ function useCatalogChange() {
 }
 
 function buyHeartPlus() {
+  if (state.playerLevel < 7) return;
   recoverCatalogHearts();
   if (state.catalogHearts >= MAX_CATALOG_HEARTS) {
     els.shopFeedback.textContent = "申請ハートはすでに最大です。";
@@ -3060,6 +3122,14 @@ function dungeonEnemyCardMarkup(speciesNo, level, options = {}) {
     ? `HP ${Math.round(options.hpMultiplier * 100)}%`
     : "";
   const talentText = options.talent ? `才能 ${options.talent}` : "";
+  const trainingText = options.trainingBonus
+    ? `特訓 +${typeof options.trainingBonus === "number"
+        ? options.trainingBonus
+        : `${options.trainingBonus.hp ?? 0}/${options.trainingBonus.power ?? 0}/${options.trainingBonus.star ?? 0}`}`
+    : "";
+  const levelLabel = `Lv ${level}${typeof options.trainingBonus === "number" && options.trainingBonus > 0
+    ? `+${options.trainingBonus}`
+    : ""}`;
   const behaviorText = options.switchAtLowHp ? "ピンチ時交代" : "";
   return `
     <article class="dungeon-enemy-card">
@@ -3069,12 +3139,12 @@ function dungeonEnemyCardMarkup(speciesNo, level, options = {}) {
       <span class="dungeon-enemy-copy">
         <strong>${species.name}</strong>
         <span>
-          <i class="level-chip">Lv ${level}</i>
+          <i class="level-chip">${levelLabel}</i>
           <i class="inline-rank" style="${rankStyle(rank)}">${rank.name}</i>
           <i class="attribute-chip" style="--attr-bg:${attr.bg};--attr-color:${attr.color}">${attr.name}</i>
         </span>
-        ${hpText || talentText || behaviorText
-          ? `<small>${[hpText, talentText, behaviorText].filter(Boolean).join(" / ")}</small>`
+        ${hpText || talentText || trainingText || behaviorText
+          ? `<small>${[hpText, talentText, trainingText, behaviorText].filter(Boolean).join(" / ")}</small>`
           : ""}
       </span>
     </article>`;
@@ -3158,7 +3228,11 @@ function openDungeonDetails() {
 
 function openDungeonPartyEditor(dungeonId) {
   const dungeon = DUNGEON_CONFIG[dungeonId];
+  if (state.tutorialStage === "dungeonSelect" && dungeonId !== "warawara") return;
   if (!dungeon || !isDungeonUnlocked(dungeon)) return;
+  if (state.tutorialStage === "dungeonSelect" && dungeonId === "warawara") {
+    state.tutorialStage = "dungeonSelected";
+  }
   state.partyEditorMode = "dungeon";
   state.selectedDungeon = dungeonId;
   els.selectedDungeonName.textContent = dungeon.name;
@@ -3655,6 +3729,9 @@ function startDungeon() {
   state.allyPartyGauge = 0;
   state.enemyPartyGauge = 0;
   state.awaitingReplacement = false;
+  if (state.tutorialStage === "dungeonSelected" && state.selectedDungeon === "warawara") {
+    state.tutorialStage = "rushIntro";
+  }
   showView("battleView");
   startBattleRound();
 }
@@ -3662,7 +3739,6 @@ function startDungeon() {
 function configuredEnemy(speciesNo, level, hpMultiplier = 1, boss = false, options = {}) {
   state.discoveredSpecies.add(speciesNo);
   const monster = createMonster(0, speciesNo, level, options);
-  if (boss) monster.name = `ヌシ・${monster.name}`;
   const fighter = makeFighter(monster, true, boss);
   fighter.maxHp = Math.max(1, Math.round(fighter.maxHp * hpMultiplier));
   fighter.hp = fighter.maxHp;
@@ -3784,7 +3860,8 @@ function startBattleRound() {
           && !(bossConfig.ivRange ?? dungeon.enemyIvRange)
           ? { fixedIv: 0 }
           : {}),
-        talent: bossConfig.talent ?? 0
+        talent: bossConfig.talent ?? 0,
+        trainingBonus: bossConfig.trainingBonus ?? 0
       }
     );
     fighter.switchAtLowHp = Boolean(bossConfig.switchAtLowHp);
@@ -3815,6 +3892,18 @@ function startBattleRound() {
   applyBattleEntryTraits("boss");
   appendBattleLog("ページを左右にスワイプして技を選ぶ");
   renderBattleStatuses();
+  if (state.tutorialStage === "rushRunning") {
+    state.battleLocked = true;
+    showTutorialMessage(
+      "ガチバトルではモンスターを1体ずつ繰り出すよ！\n右技と左技を選び、相手を全員倒そう！",
+      () => {
+        state.tutorialStage = "bossRunning";
+        state.battleLocked = false;
+        setBattleMessage("あなたのターン");
+      },
+      "ガチバトル開始"
+    );
+  }
 }
 
 function resetBossBattleVisualState() {
@@ -3863,7 +3952,8 @@ function startRushBattle() {
         && !(rushConfig.ivRange ?? dungeon.enemyIvRange)
         ? { fixedIv: 0 }
         : {}),
-      talent: rushConfig.talents?.[index] ?? rushConfig.talent ?? 0
+      talent: rushConfig.talents?.[index] ?? rushConfig.talent ?? 0,
+      trainingBonus: rushConfig.trainingBonuses?.[index] ?? rushConfig.trainingBonus ?? 0
     }
   ));
   state.allies.forEach((fighter) => {
@@ -3888,7 +3978,20 @@ function startRushBattle() {
   applyBattleEntryTraits("rush");
   appendBattleLog("モンスターたちが一斉に駆け出した");
   renderBattleStatuses();
-  startRushTimer();
+  if (state.tutorialStage === "rushIntro") {
+    state.battleLocked = true;
+    showTutorialMessage(
+      "ラッシュバトルはモンスターたちが自動で戦うよ！\nHPとバトルログを見ながら応援しよう！",
+      () => {
+        state.tutorialStage = "rushRunning";
+        state.battleLocked = false;
+        startRushTimer();
+      },
+      "ラッシュ開始"
+    );
+  } else {
+    startRushTimer();
+  }
 }
 
 function rushBattleTick() {
@@ -4119,7 +4222,7 @@ function renderBattle() {
   els.testClearButton.textContent = "TEST: ガチバトル突破";
   els.battleKind.textContent = "GACHI BATTLE";
   const dungeon = currentDungeon();
-  els.battleTitle.textContent = `${dungeon.name}のヌシ`;
+  els.battleTitle.textContent = dungeon.name;
   renderBattleDots();
   const ally = state.allies[state.activeAllyIndex];
   const enemy = state.enemies[0];
@@ -4165,6 +4268,8 @@ function renderBattleHp() {
   const enemy = state.enemies[0];
   setHpBar(els.allyHp, ally);
   setHpBar(els.enemyHp, enemy);
+  els.allyHpValue.textContent = `${Math.max(0, ally.hp)} / ${ally.maxHp}`;
+  els.enemyHpValue.textContent = `${Math.max(0, enemy.hp)} / ${enemy.maxHp}`;
   setBattleGauge(els.allyGauge, els.allyGaugeValue, state.allyPartyGauge);
   setBattleGauge(els.enemyGauge, els.enemyGaugeValue, state.enemyPartyGauge);
   updateBossMoveAvailability();
@@ -4418,6 +4523,7 @@ function setHpBar(element, fighter) {
 }
 
 function renderBench() {
+  els.replacementPrompt.hidden = !state.awaitingReplacement;
   els.bench.innerHTML = state.allies.map((fighter, index) => {
     const active = index === state.activeAllyIndex;
     const percent = Math.max(0, Math.round((fighter.hp / fighter.maxHp) * 100));
@@ -4431,7 +4537,7 @@ function renderBench() {
         <div class="mini-monster" style="${monsterStyle(fighter.monster)}"></div>
         <span class="bench-copy">
           <strong>${fighter.name}</strong>
-          <span>${selectableReplacement ? "次に出す" : `HP ${percent}%`}</span>
+          <span>HP ${fighter.hp} / ${fighter.maxHp}（${percent}%）</span>
         </span>
       </button>`;
   }).join("");
@@ -4571,7 +4677,7 @@ function useMove(direction) {
       } else {
         state.awaitingReplacement = true;
         renderBench();
-        setBattleMessage("味方：次に出すモンスターを選んでください");
+        setBattleMessage("次のモンスターを選んでください");
       }
     } else {
       battleTimeout(enemyTurn, 520, "boss");
@@ -4653,7 +4759,7 @@ function useMove(direction) {
           state.awaitingReplacement = true;
           state.battleLocked = true;
           renderBench();
-          setBattleMessage("火傷で倒れた。次に出すモンスターを選んでください");
+          setBattleMessage("次のモンスターを選んでください");
         }
       } else if (switchEnemyAtLowHp()) {
         return;
@@ -4752,7 +4858,7 @@ function enemyTurn() {
         state.awaitingReplacement = true;
         state.battleLocked = true;
         renderBench();
-        setBattleMessage("味方：次に出すモンスターを選んでください");
+        setBattleMessage("次のモンスターを選んでください");
       }, 700, "boss");
     } else if (switchEnemyAtLowHp()) {
       return;
@@ -4869,7 +4975,11 @@ function createDungeonMatchRequest(dungeon) {
       : selectedMonster.level,
     {
       ...(selectedMonster.rank ? { rankName: selectedMonster.rank } : {}),
-      ...(selectedMonster.talent ? { talent: selectedMonster.talent } : {})
+      ...(selectedMonster.talent ? { talent: selectedMonster.talent } : {}),
+      ...(selectedMonster.iv ? { iv: selectedMonster.iv } : {}),
+      ...(selectedMonster.trainingBonus
+        ? { trainingBonus: selectedMonster.trainingBonus }
+        : {})
     }
   );
   monster.requestTable = selectedTable.name;
@@ -5008,6 +5118,17 @@ function finishDungeon(cleared) {
       : `${newRequests.length}体から新着申請。未確認は合計${pendingRequestCount()}体です。`;
   renderBattleHistory();
   els.resultOverlay.hidden = false;
+  if (cleared && state.tutorialStage === "bossRunning") {
+    showTutorialMessage(
+      "マッチ申請が来ているよ！\nショップでケージを用意してモンスターとマッチしよう！",
+      () => {
+        state.tutorialStage = "done";
+        els.tutorialSkipButton.hidden = true;
+        updateResources();
+      },
+      "わかった"
+    );
+  }
 }
 
 function escapeLogHtml(value) {
@@ -5427,17 +5548,13 @@ function openMonsterDetail(monster = state.requests[state.requestIndex], mode = 
   els.detailIvHpValue.textContent = monster.iv.hp;
   els.detailIvAtkValue.textContent = monster.iv.atk;
   els.detailIvSenseValue.textContent = monster.iv.sense;
-  const historyCount = monster.pairLineage
-    ? pairHistoryCounts({ monster: pairLineageIdentity(monster), pairing: monster.pairLineage }).pairings
-    : 0;
   const legacyHistory = hasLegacyPairTraining(monster);
-  els.openPairHistory.classList.toggle("has-history", historyCount > 0 || legacyHistory);
-  els.detailPairHistoryCount.hidden = historyCount === 0;
-  els.detailPairHistoryCount.textContent = historyCount;
+  const hasHistory = Boolean(monster.pairLineage) || legacyHistory;
+  els.openPairHistory.classList.toggle("has-history", hasHistory);
   els.openPairHistory.setAttribute(
     "aria-label",
-    historyCount
-      ? `ペアトレ履歴 ${historyCount}件`
+    monster.pairLineage
+      ? "ペアトレ履歴あり"
       : legacyHistory
         ? "旧データのペアトレ履歴あり"
         : "ペアトレ履歴なし"
@@ -5667,6 +5784,7 @@ function bindEvents() {
   });
   els.buyCageButton.addEventListener("click", buyCage);
   els.buyCageFButton.addEventListener("click", buyCageF);
+  els.buyCageEButton.addEventListener("click", buyCageE);
   els.buyExp500DrinkButton.addEventListener("click", buyExp500Drink);
   els.useExp500DrinkButton.addEventListener(
     "click",
@@ -5816,7 +5934,7 @@ function bindEvents() {
     state.selectedOutgoingCageType = null;
     els.cageSelectDialog.close();
   });
-  [els.standardCageChoice, els.fCageChoice].forEach((choice) => {
+  [els.standardCageChoice, els.fCageChoice, els.eCageChoice].forEach((choice) => {
     choice.addEventListener("click", () => {
       if (choice.disabled) return;
       state.selectedOutgoingCageType = choice.dataset.cageType;
@@ -5827,6 +5945,10 @@ function bindEvents() {
       els.fCageChoice.classList.toggle(
         "selected",
         state.selectedOutgoingCageType === "F"
+      );
+      els.eCageChoice.classList.toggle(
+        "selected",
+        state.selectedOutgoingCageType === "E"
       );
       const monster = state.outgoingCandidates.find(
         (candidate) => candidate.id === state.pendingOutgoingMonsterId

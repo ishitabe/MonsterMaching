@@ -185,7 +185,7 @@
             <span class="selection-count">Gold <strong id="shopGold">320</strong></span>
           </div>
           <p class="home-caption">マッチしたモンスターを仲間にするための道具です。</p>
-          <section class="shop-item" id="shopCageFItem">
+          <section class="shop-item">
             <div class="cage-icon" aria-hidden="true"><i></i></div>
             <div class="shop-item-copy">
               <strong>モンスターケージG</strong>
@@ -197,7 +197,7 @@
               <strong>100 Gold</strong>
             </button>
           </section>
-          <section class="shop-item">
+          <section class="shop-item" id="shopCageFItem">
             <div class="cage-icon cage-icon-f" aria-hidden="true"><i></i></div>
             <div class="shop-item-copy">
               <strong>モンスターケージF</strong>
@@ -207,6 +207,18 @@
             <button class="shop-buy-button cage-f-buy-button" id="buyCageFButton" type="button">
               <span>1個購入</span>
               <strong>300 Gold</strong>
+            </button>
+          </section>
+          <section class="shop-item" id="shopCageEItem">
+            <div class="cage-icon cage-icon-e" aria-hidden="true"><i></i></div>
+            <div class="shop-item-copy">
+              <strong>モンスターケージE</strong>
+              <span>所持数 <b id="shopCageECount">0</b></span>
+              <small>Eランク以下のモンスターに使用可能 / PL5で解放</small>
+            </div>
+            <button class="shop-buy-button" id="buyCageEButton" type="button">
+              <span>1個購入</span>
+              <strong>700 Gold</strong>
             </button>
           </section>
           <section class="shop-item" id="shopExpDrinkItem">
@@ -229,7 +241,7 @@
             <div class="shop-item-copy">
               <strong>経験値3000ドリンク</strong>
               <span>所持数 <b id="shopExpDrinkCount">0</b></span>
-              <small>好きな仲間1体に3000経験値 / PL7で解放</small>
+              <small>好きな仲間1体に3000経験値 / PL6で解放</small>
             </div>
             <div class="shop-item-actions">
               <button class="shop-buy-button" id="buyExpDrinkButton" type="button">
@@ -254,12 +266,12 @@
               <button class="shop-use-button" id="useExpMistButton" type="button">使う</button>
             </div>
           </section>
-          <section class="shop-item">
+          <section class="shop-item" id="shopCatalogChangeItem">
             <div class="catalog-item-icon" aria-hidden="true">↻</div>
             <div class="shop-item-copy">
               <strong>カタログチェンジ</strong>
               <span>所持数 <b id="shopCatalogChangeCount">0</b></span>
-              <small>カタログマッチの一覧をすぐ更新</small>
+              <small>カタログマッチの一覧をすぐ更新 / PL7で解放</small>
             </div>
             <div class="shop-item-actions">
               <button class="shop-buy-button" id="buyCatalogChangeButton" type="button">
@@ -269,12 +281,12 @@
               <button class="shop-use-button" id="useCatalogChangeButton" type="button">使う</button>
             </div>
           </section>
-          <section class="shop-item">
+          <section class="shop-item" id="shopHeartPlusItem">
             <div class="catalog-item-icon heart-plus-icon" aria-hidden="true">♥</div>
             <div class="shop-item-copy">
               <strong>ハートプラス</strong>
               <span>申請ハートを5つまで回復</span>
-              <small>購入時にその場で全回復</small>
+              <small>購入時にその場で全回復 / PL7で解放</small>
             </div>
             <button class="shop-buy-button" id="buyHeartPlusButton" type="button">
               <span>使用する</span>
@@ -352,7 +364,10 @@
                 <span>GACHI</span>
               </div>
               <div class="fighter-status-icons" id="enemyStatusIcons"></div>
-              <div class="hp-track"><i class="hp-fill" id="enemyHp"></i></div>
+              <div class="combatant-hp-row">
+                <strong class="combatant-hp-value" id="enemyHpValue">0 / 0</strong>
+                <div class="hp-track"><i class="hp-fill" id="enemyHp"></i></div>
+              </div>
               <div class="battle-gauge-row">
                 <span>G</span>
                 <div class="battle-gauge-track"><i id="enemyGauge"></i></div>
@@ -372,7 +387,10 @@
                 <span>YOUR MONSTER</span>
               </div>
               <div class="fighter-status-icons" id="allyStatusIcons"></div>
-              <div class="hp-track"><i class="hp-fill" id="allyHp"></i></div>
+              <div class="combatant-hp-row">
+                <strong class="combatant-hp-value" id="allyHpValue">0 / 0</strong>
+                <div class="hp-track"><i class="hp-fill" id="allyHp"></i></div>
+              </div>
               <div class="battle-gauge-row">
                 <span>G</span>
                 <div class="battle-gauge-track"><i id="allyGauge"></i></div>
@@ -393,6 +411,7 @@
               </button>
             </div>
             <div class="bench" id="bench" aria-label="控えモンスター"></div>
+            <div class="replacement-prompt" id="replacementPrompt" hidden>次のモンスターを選んでください</div>
           </div>
           <div class="battle-log-panel boss-log-panel">
             <div class="battle-log-title"><strong>BATTLE LOG</strong><span>スクロールして遡れます</span></div>
@@ -741,6 +760,11 @@
         <span><strong>モンスターケージF</strong><small>Fランク以下に使用可能</small></span>
         <b>所持 <i id="outgoingCageFCount">0</i></b>
       </button>
+      <button class="cage-choice" id="eCageChoice" data-cage-type="E" type="button">
+        <span class="cage-icon cage-icon-e" aria-hidden="true"><i></i></span>
+        <span><strong>モンスターケージE</strong><small>Eランク以下に使用可能</small></span>
+        <b>所持 <i id="outgoingCageECount">0</i></b>
+      </button>
       <button class="primary-button" id="confirmOutgoingApplication" type="button">このケージで申請</button>
     </dialog>
 
@@ -770,10 +794,8 @@
       <div class="detail-summary">
         <div class="detail-visual" id="detailVisual">
           <div class="monster-art detail-monster" aria-hidden="true"></div>
-          <button class="pair-history-button" id="openPairHistory" type="button">
-            <span aria-hidden="true">系</span>履歴
-            <b id="detailPairHistoryCount" hidden>0</b>
-          </button>
+          <button class="pair-history-button" id="openPairHistory" type="button"
+            aria-label="ペアトレ履歴" title="ペアトレ履歴">💪</button>
           <div class="detail-image-identity">
             <p class="eyebrow">MONSTER PROFILE</p>
             <h2 id="detailName">---</h2>
