@@ -6055,7 +6055,7 @@ h2 {
   .enemy-combatant {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 102px;
-    grid-template-rows: auto 20px 14px 22px;
+    grid-template-rows: auto 20px 26px 24px;
     column-gap: 10px;
     align-self: stretch;
     margin-left: auto;
@@ -6063,7 +6063,7 @@ h2 {
 
   .enemy-combatant .combatant-head,
   .enemy-combatant .fighter-status-icons,
-  .enemy-combatant .hp-track,
+  .enemy-combatant .combatant-hp-row,
   .enemy-combatant .battle-gauge-row {
     grid-column: 1;
   }
@@ -6079,7 +6079,7 @@ h2 {
   .ally-combatant {
     display: grid;
     grid-template-columns: 102px minmax(0, 1fr);
-    grid-template-rows: auto 20px 14px 22px;
+    grid-template-rows: auto 20px 26px 24px;
     column-gap: 10px;
     align-self: stretch;
   }
@@ -6094,7 +6094,7 @@ h2 {
 
   .ally-combatant .combatant-head,
   .ally-combatant .fighter-status-icons,
-  .ally-combatant .hp-track,
+  .ally-combatant .combatant-hp-row,
   .ally-combatant .battle-gauge-row {
     grid-column: 2;
   }
@@ -6145,6 +6145,17 @@ h2 {
   .battle-gauge-row {
     grid-template-columns: 14px minmax(0, 1fr) 42px;
     margin-top: 3px;
+  }
+
+  .combatant-hp-row {
+    align-self: center;
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .combatant-hp-value {
+    min-width: 0;
+    font-size: 9px;
   }
 
   .hp-track {

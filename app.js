@@ -102,8 +102,8 @@ const CAGE_F_PRICE = 300;
 const CAGE_E_PRICE = 700;
 const EXP_500_DRINK_PRICE = 200;
 const EXP_500_DRINK_AMOUNT = 500;
-const EXP_DRINK_PRICE = 1500;
-const EXP_DRINK_AMOUNT = 3000;
+const EXP_DRINK_PRICE = 2200;
+const EXP_DRINK_AMOUNT = 5000;
 const EXP_MIST_PRICE = 700;
 const EXP_MIST_AMOUNT = 500;
 const CATALOG_CHANGE_PRICE = 1000;
@@ -612,6 +612,8 @@ const state = {
   profilePickerAttributeFilter: "all",
   pairPickerSort: "newest",
   pairPickerAttributeFilter: "all",
+  expDrinkSort: "newest",
+  expDrinkAttributeFilter: "all",
   pairBaseId: null,
   pairPartnerId: null,
   pairPickerMode: "base",
@@ -732,6 +734,7 @@ function cacheElements() {
     "shopHeartPlusItem", "buyHeartPlusButton",
     "expDrinkDialog", "closeExpDrinkDialog", "expDrinkRoster",
     "expDrinkDialogCopy", "expDrinkDialogStatus", "expDrinkFeedback",
+    "expDrinkSort", "expDrinkAttributeFilter",
     "collectionCount", "collectionGrid", "collectionSort", "collectionAttributeFilter",
     "openPartyEditorButton",
     "partyDialog", "closePartyDialog", "selectedDungeonName",
@@ -1042,9 +1045,6 @@ function showExperienceReward(experienceAwards, title, onContinue) {
   els.experienceAmount.textContent = minimumAward === maximumAward
     ? `各 +${minimumAward} EXP`
     : `${minimumAward}〜${maximumAward} EXP`;
-  if (reserveRewards.length) {
-    els.experienceAmount.textContent += ` / 仲間全員にも1/2`;
-  }
   els.experienceList.innerHTML = rewards.map((reward) => {
     const levelUp = reward.leveledUp
       ? `<div class="level-up-result">
@@ -1311,6 +1311,8 @@ function createSaveData() {
     profilePickerAttributeFilter: state.profilePickerAttributeFilter,
     pairPickerSort: state.pairPickerSort,
     pairPickerAttributeFilter: state.pairPickerAttributeFilter,
+    expDrinkSort: state.expDrinkSort,
+    expDrinkAttributeFilter: state.expDrinkAttributeFilter,
     outgoingCandidates: state.outgoingCandidates.map(serializeMonster),
     outgoingGeneratedAt: state.outgoingGeneratedAt,
     discoveredSpecies: [...state.discoveredSpecies],
@@ -1463,6 +1465,8 @@ function applySaveData(rawSave) {
   state.profilePickerAttributeFilter = saved.profilePickerAttributeFilter || "all";
   state.pairPickerSort = saved.pairPickerSort || "newest";
   state.pairPickerAttributeFilter = saved.pairPickerAttributeFilter || "all";
+  state.expDrinkSort = saved.expDrinkSort || "newest";
+  state.expDrinkAttributeFilter = saved.expDrinkAttributeFilter || "all";
   state.outgoingCandidates = (saved.outgoingCandidates ?? []).map(hydrateMonster).filter(Boolean);
   state.outgoingGeneratedAt = Number(saved.outgoingGeneratedAt) || 0;
   state.discoveredSpecies = new Set(saved.discoveredSpecies ?? friends.map((monster) => monster.speciesNo));
@@ -1522,6 +1526,8 @@ function applySaveData(rawSave) {
   els.profilePickerAttributeFilter.value = state.profilePickerAttributeFilter;
   els.pairPickerSort.value = state.pairPickerSort;
   els.pairPickerAttributeFilter.value = state.pairPickerAttributeFilter;
+  els.expDrinkSort.value = state.expDrinkSort;
+  els.expDrinkAttributeFilter.value = state.expDrinkAttributeFilter;
   renderParty();
   setHomeTab(state.homeTab);
   updateResources();
@@ -2656,7 +2662,8 @@ function createPairTrainingResult(baseMonster, partnerMonster, evolve) {
   if (evolve && recipe) {
     result = createMonster(0, recipe.resultSpecies, 1, { iv: inheritedIv, talent });
     result.id = baseMonster.id;
-    result.acquiredOrder = baseMonster.acquiredOrder;
+    state.friendSequence += 1;
+    result.acquiredOrder = state.friendSequence;
   } else {
     result = {
       ...baseMonster,
@@ -2900,7 +2907,7 @@ function buyExpDrink() {
   }
   state.gold -= EXP_DRINK_PRICE;
   state.expDrinks += 1;
-  els.shopFeedback.textContent = "経験値3000ドリンクを購入しました。";
+  els.shopFeedback.textContent = "経験値5000ドリンクを購入しました。";
   updateResources();
 }
 
@@ -2996,9 +3003,13 @@ function renderExpDrinkDialog() {
   const count = activeExpDrinkCount();
   els.expDrinkDialogCopy.textContent = `選んだモンスターに${amount}経験値を与えます。`;
   els.expDrinkDialogStatus.textContent = `経験値${amount}ドリンク 所持数 ${count}`;
-  els.expDrinkRoster.innerHTML = state.friends.map((monster) => (
+  const monsters = getFilteredSortedFriends(
+    state.expDrinkSort,
+    state.expDrinkAttributeFilter
+  );
+  els.expDrinkRoster.innerHTML = monsters.map((monster) => (
     monsterListCardMarkup(monster, "drink-target")
-  )).join("");
+  )).join("") || '<p class="collection-empty">該当するモンスターはいません。</p>';
   els.expDrinkRoster.querySelectorAll("[data-drink-target]").forEach((button) => {
     button.disabled = count <= 0;
   });
@@ -3624,8 +3635,13 @@ function applyMoveEffects(attacker, target, move, result, rush = false) {
   if (key === "poisonFang" && Math.random() < 0.5) addStatus(target, "poison");
   if (key === "fireHammer") changeStage(attacker, "star", 1);
   if (key === "glitterMachine") {
-    const party = state.allies.includes(attacker) ? state.allies : state.enemies;
-    living(party).forEach((fighter) => changeStage(fighter, "star", 2));
+    const party = state.allies.includes(attacker)
+      ? state.allies
+      : [...state.enemies, ...state.bossQueue];
+    party
+      .filter((fighter) => fighter.hp > 0 && !fighter.escaped)
+      .forEach((fighter) => changeStage(fighter, "star", 2));
+    appendBattleLog(`${fighterLogName(attacker)}のキラキラでパーティー全体のスターが上がった`, "status stat-up");
   }
   if (key === "electricShock" && Math.random() < 0.2) addStatus(target, "paralysis");
   if (key === "lick" && Math.random() < 0.5) addStatus(target, "blind");
@@ -4666,6 +4682,7 @@ function useMove(direction) {
   const ally = state.allies[state.activeAllyIndex];
   const enemy = state.enemies[0];
   if (!ally || ally.hp <= 0 || !enemy || enemy.hp <= 0) return;
+  if (switchEnemyAtLowHp()) return;
   if (actionBlocked(ally)) {
     state.battleLocked = true;
     finishFighterAction(ally);
@@ -4761,8 +4778,6 @@ function useMove(direction) {
           renderBench();
           setBattleMessage("次のモンスターを選んでください");
         }
-      } else if (switchEnemyAtLowHp()) {
-        return;
       } else {
         battleTimeout(enemyTurn, 700, "boss");
       }
@@ -4860,8 +4875,6 @@ function enemyTurn() {
         renderBench();
         setBattleMessage("次のモンスターを選んでください");
       }, 700, "boss");
-    } else if (switchEnemyAtLowHp()) {
-      return;
     } else {
       battleTimeout(() => {
         state.battleLocked = false;
@@ -4894,7 +4907,10 @@ function switchAlly(index) {
   setBattleMessage(`【味方】${fighter.name}に交代した`);
   triggerEntryTrait(fighter, state.enemies);
   renderBattleHp();
-  battleTimeout(enemyTurn, 600, "boss");
+  battleTimeout(() => {
+    if (switchEnemyAtLowHp()) return;
+    enemyTurn();
+  }, 600, "boss");
 }
 
 function advanceBossBattle() {
@@ -5807,6 +5823,16 @@ function bindEvents() {
   els.expDrinkRoster.addEventListener("click", (event) => {
     const button = event.target.closest("[data-drink-target]");
     if (button) useExpDrinkOnMonster(button.dataset.drinkTarget);
+  });
+  els.expDrinkSort.addEventListener("change", () => {
+    state.expDrinkSort = els.expDrinkSort.value;
+    renderExpDrinkDialog();
+    scheduleAutosave();
+  });
+  els.expDrinkAttributeFilter.addEventListener("change", () => {
+    state.expDrinkAttributeFilter = els.expDrinkAttributeFilter.value;
+    renderExpDrinkDialog();
+    scheduleAutosave();
   });
   els.openPartyEditorButton.addEventListener("click", openPartyManager);
   els.collectionSort.addEventListener("change", () => {

@@ -239,14 +239,14 @@
           <section class="shop-item" id="shopExp3000DrinkItem">
             <div class="exp-drink-icon" aria-hidden="true"><i>EXP</i></div>
             <div class="shop-item-copy">
-              <strong>経験値3000ドリンク</strong>
+              <strong>経験値5000ドリンク</strong>
               <span>所持数 <b id="shopExpDrinkCount">0</b></span>
-              <small>好きな仲間1体に3000経験値 / PL6で解放</small>
+              <small>好きな仲間1体に5000経験値 / PL6で解放</small>
             </div>
             <div class="shop-item-actions">
               <button class="shop-buy-button" id="buyExpDrinkButton" type="button">
                 <span>1個購入</span>
-                <strong>1500 Gold</strong>
+                <strong>2200 Gold</strong>
               </button>
               <button class="shop-use-button" id="useExpDrinkButton" type="button">使う</button>
             </div>
@@ -580,6 +580,35 @@
       <p class="dialog-copy" id="expDrinkDialogCopy">選んだモンスターに経験値を与えます。</p>
       <p class="exp-drink-dialog-status" id="expDrinkDialogStatus">所持数 0</p>
       <p class="exp-drink-feedback" id="expDrinkFeedback" hidden></p>
+      <div class="collection-controls picker-controls">
+        <label>
+          <span>並び替え</span>
+          <select id="expDrinkSort">
+            <option value="newest">新しい順</option>
+            <option value="level">レベルが高い順</option>
+            <option value="sp">SPが高い順</option>
+            <option value="hp">HPが高い順</option>
+            <option value="power">パワーが高い順</option>
+            <option value="star">スターが高い順</option>
+            <option value="ivHp">個体値HPが高い順</option>
+            <option value="ivPower">個体値パワーが高い順</option>
+            <option value="ivStar">個体値スターが高い順</option>
+            <option value="ivTotal">個体値合計が高い順</option>
+          </select>
+        </label>
+        <label>
+          <span>属性</span>
+          <select id="expDrinkAttributeFilter">
+            <option value="all">すべて</option>
+            <option value="赤">赤</option>
+            <option value="緑">緑</option>
+            <option value="青">青</option>
+            <option value="白">白</option>
+            <option value="黒">黒</option>
+            <option value="無">無</option>
+          </select>
+        </label>
+      </div>
       <div class="roster picker-roster" id="expDrinkRoster"></div>
     </dialog>
 
