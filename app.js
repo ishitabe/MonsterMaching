@@ -561,6 +561,19 @@ const DUNGEON_CONFIG = {
       { species: 14, level: 30, hpMultiplier: 1 },
       { species: 13, level: 32, hpMultiplier: 1 }
     ]
+  },
+  monsterBreederHamazaki: {
+    number: "SP3",
+    category: "special",
+    requiredPlayerLevel: 5,
+    name: "モンスターブリーダー ハマザキ",
+    baseExperience: 90,
+    rushes: [],
+    bosses: [
+      { species: 36, level: 50, hpMultiplier: 1, trainingBonus: 250, switchAtLowHp: true },
+      { species: 33, level: 55, hpMultiplier: 1.5, trainingBonus: 300 },
+      { species: 29, level: 45, hpMultiplier: 1, trainingBonus: 200 }
+    ]
   }
 };
 const RANK_EXPERIENCE_MULTIPLIERS = {
