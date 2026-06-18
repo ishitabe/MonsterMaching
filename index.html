@@ -32,6 +32,7 @@
             <div class="monster-heading-actions">
               <span class="selection-count" id="collectionCount">0体</span>
               <button class="party-edit-button" id="openPartyEditorButton" type="button">パーティー編成</button>
+              <button class="party-edit-button codex-button" id="openCodexButton" type="button">図鑑</button>
             </div>
           </div>
           <p class="home-caption">モンスターをタップすると詳細を確認できます。</p>
@@ -320,6 +321,24 @@
             <span>ショップ</span>
           </button>
         </nav>
+      </section>
+
+      <section class="view codex-view" id="codexView">
+        <div class="codex-head">
+          <button class="icon-back-button codex-back-button" id="closeCodexButton" type="button" aria-label="モンスタータブへ戻る">‹</button>
+          <div>
+            <p class="eyebrow">MONSTER CODEX</p>
+            <h1>モンスター図鑑</h1>
+          </div>
+        </div>
+        <section class="codex-progress">
+          <div class="codex-complete-main">
+            <span>図鑑コンプ率</span>
+            <strong id="codexCompleteRate">0%</strong>
+          </div>
+          <div class="codex-rank-bars" id="codexRankBars"></div>
+        </section>
+        <div class="codex-grid" id="codexGrid"></div>
       </section>
 
       <section class="view battle-view" id="battleView">
@@ -949,6 +968,17 @@
         <button class="secondary-button" id="benchDetailButton" type="button">詳細を見る</button>
         <button class="primary-button" id="benchSwitchButton" type="button">交代する</button>
       </div>
+    </dialog>
+
+    <dialog class="codex-detail-dialog" id="codexDetailDialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">CODEX PROFILE</p>
+          <h2 id="codexDetailName">？？？</h2>
+        </div>
+        <button class="close-button" id="closeCodexDetail" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="codex-detail-body" id="codexDetailBody"></div>
     </dialog>
 
     <dialog class="developer-save-dialog" id="developerSaveDialog">

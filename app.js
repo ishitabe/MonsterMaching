@@ -111,7 +111,7 @@ const HEART_PLUS_PRICE = 2000;
 const MAX_CATALOG_HEARTS = 5;
 const CATALOG_HEART_RECOVERY_MS = 30 * 60 * 1000;
 const OUTGOING_MATCH_REFRESH_MS = 3 * 60 * 60 * 1000;
-const SAVE_VERSION = 8;
+const SAVE_VERSION = 9;
 const AUTOSAVE_KEY = "monmachi.save.autosave";
 const MANUAL_SAVE_PREFIX = "monmachi.save.slot.";
 const MANUAL_SAVE_SLOT_COUNT = 5;
@@ -627,6 +627,8 @@ const state = {
   selectedOutgoingCageType: null,
   catalogMatchAnimating: false,
   discoveredSpecies: new Set([1, 2, 3, 4, 5, 6]),
+  ownedSpecies: new Set(),
+  newCodexSpecies: new Set(),
   profileMonsterIds: [],
   editingProfileMonsterIds: [],
   editingProfileSlot: 0,
@@ -652,6 +654,7 @@ const state = {
   bossQueue: [],
   defeatedBosses: [],
   activeAllyIndex: 0,
+  selectedLeftMoveIndex: 0,
   allyPartyGauge: 0,
   enemyPartyGauge: 0,
   rushAllyGauge: 0,
@@ -705,7 +708,7 @@ function cacheElements() {
     "optionsButton", "optionsDialog", "closeOptions", "rushSpeedSelect", "bossSpeedSelect",
     "developerSaveButton", "developerSaveDialog", "closeDeveloperSave",
     "autosaveStatus", "developerSaveSlots", "developerNewGame",
-    "partyView", "battleView", "matchView",
+    "partyView", "codexView", "battleView", "matchView",
     "tutorialSkipButton", "tutorialOverlay", "tutorialText", "tutorialContinueButton",
     "testClearButton", "openBattleStatus", "battleStatusDialog",
     "closeBattleStatus", "battleStatusContent",
@@ -736,7 +739,9 @@ function cacheElements() {
     "expDrinkDialogCopy", "expDrinkDialogStatus", "expDrinkFeedback",
     "expDrinkSort", "expDrinkAttributeFilter",
     "collectionCount", "collectionGrid", "collectionSort", "collectionAttributeFilter",
-    "openPartyEditorButton",
+    "openPartyEditorButton", "openCodexButton", "closeCodexButton",
+    "codexCompleteRate", "codexRankBars", "codexGrid",
+    "codexDetailDialog", "closeCodexDetail", "codexDetailName", "codexDetailBody",
     "partyDialog", "closePartyDialog", "selectedDungeonName",
     "dungeonBossSummary", "dungeonBossList", "openDungeonDetails",
     "dungeonDetailDialog", "closeDungeonDetails", "dungeonDetailName",
@@ -1316,6 +1321,7 @@ function createSaveData() {
     outgoingCandidates: state.outgoingCandidates.map(serializeMonster),
     outgoingGeneratedAt: state.outgoingGeneratedAt,
     discoveredSpecies: [...state.discoveredSpecies],
+    ownedSpecies: [...state.ownedSpecies],
     profileMonsterIds: [...state.profileMonsterIds],
     partyPresets: state.partyPresets.map((preset) => [...preset]),
     activePresetIndex: state.activePresetIndex,
@@ -1385,6 +1391,11 @@ function migrateSaveData(savedData) {
   }
   if (migrated.saveVersion < 8) {
     migrated.cagesE = 0;
+  }
+  if (migrated.saveVersion < 9) {
+    migrated.ownedSpecies = (migrated.friends ?? [])
+      .map((monster) => monster?.speciesNo)
+      .filter(Boolean);
   }
   migrated.saveVersion = SAVE_VERSION;
   return migrated;
@@ -1470,6 +1481,11 @@ function applySaveData(rawSave) {
   state.outgoingCandidates = (saved.outgoingCandidates ?? []).map(hydrateMonster).filter(Boolean);
   state.outgoingGeneratedAt = Number(saved.outgoingGeneratedAt) || 0;
   state.discoveredSpecies = new Set(saved.discoveredSpecies ?? friends.map((monster) => monster.speciesNo));
+  state.ownedSpecies = new Set([
+    ...(saved.ownedSpecies ?? []),
+    ...friends.map((monster) => monster.speciesNo)
+  ]);
+  state.newCodexSpecies = new Set();
   state.profileMonsterIds = (saved.profileMonsterIds ?? []).filter((id) => validIds.has(id)).slice(0, 3);
   state.partyPresets = Array.from({ length: 3 }, (_, index) => (
     sanitizePartyPreset(saved.partyPresets?.[index], validIds)
@@ -1541,9 +1557,13 @@ function monsterStyle(monster) {
 }
 
 function addFriendDirect(monster) {
+  const firstOwned = !state.ownedSpecies.has(monster.speciesNo);
   state.friendSequence += 1;
   monster.acquiredOrder = state.friendSequence;
   state.friends.push(monster);
+  state.discoveredSpecies.add(monster.speciesNo);
+  state.ownedSpecies.add(monster.speciesNo);
+  if (firstOwned) state.newCodexSpecies.add(monster.speciesNo);
   return monster;
 }
 
@@ -1606,6 +1626,9 @@ function startTutorial() {
   state.catalogHeartUpdatedAt = Date.now();
   state.friends = [];
   state.friendSequence = 0;
+  state.discoveredSpecies = new Set([1, 2, 3, 4, 5, 6]);
+  state.ownedSpecies = new Set();
+  state.newCodexSpecies = new Set();
   state.partyPresets = [[], [], []];
   state.partyIds = [];
   state.profileMonsterIds = [];
@@ -1662,6 +1685,9 @@ function resetTutorialRecruitment() {
   state.cagesE = 0;
   state.friends = prince ? [prince] : [];
   state.friendSequence = prince ? 1 : 0;
+  state.discoveredSpecies = new Set([1, 2, 3, 4, 5, 6]);
+  state.ownedSpecies = new Set(prince ? [prince.speciesNo] : []);
+  state.newCodexSpecies = new Set();
   if (prince) prince.acquiredOrder = 1;
   state.partyPresets = [[prince?.id].filter(Boolean), [], []];
   state.partyIds = [...state.partyPresets[0]];
@@ -1712,6 +1738,9 @@ function skipTutorial() {
   state.catalogHeartUpdatedAt = Date.now();
   state.friends = [];
   state.friendSequence = 0;
+  state.discoveredSpecies = new Set();
+  state.ownedSpecies = new Set();
+  state.newCodexSpecies = new Set();
   addFriendDirect(createMonster(0, 1, 3));
   addFriendDirect(createMonster(0, 3, 1));
   addFriendDirect(createMonster(0, 5, 1));
@@ -2285,7 +2314,7 @@ function showCatalogMatchResult(monster, success) {
 }
 
 function showView(viewId) {
-  ["partyView", "battleView", "matchView"].forEach((id) => {
+  ["partyView", "codexView", "battleView", "matchView"].forEach((id) => {
     els[id].classList.toggle("active", id === viewId);
   });
   state.currentView = viewId;
@@ -2319,6 +2348,7 @@ function renderParty() {
   });
   renderPartyPicker();
   renderCollection();
+  if (state.currentView === "codexView") renderCodex();
   renderHomeTab();
   updateResources();
 }
@@ -2395,6 +2425,174 @@ function monsterListCardMarkup(monster, dataAttribute, selectedSlot = -1) {
       </span>
       ${selected ? `<span class="selected-slot">${selectedSlot + 1}</span>` : ""}
     </button>`;
+}
+
+function speciesAttribute(species) {
+  return attributes.find((attribute) => attribute.name === species.attribute) ?? attributes.at(-1);
+}
+
+function speciesRank(species) {
+  return monsterRanks.find((rank) => rank.name === species.rank) ?? monsterRanks[0];
+}
+
+function speciesMiniStyle(species) {
+  const attr = speciesAttribute(species);
+  return `--mini-bg:${attr.bg};--mini-color:${attr.monster};--mini-radius:50% 52% 47% 49% / 52% 48% 48% 52%`;
+}
+
+function codexState(species) {
+  if (state.ownedSpecies.has(species.no)) return "owned";
+  if (state.discoveredSpecies.has(species.no)) return "discovered";
+  return "unknown";
+}
+
+function codexCompletion() {
+  const total = monsterSpecies.length || 1;
+  const owned = monsterSpecies.filter((species) => state.ownedSpecies.has(species.no)).length;
+  const discovered = monsterSpecies.filter((species) => state.discoveredSpecies.has(species.no)).length;
+  return { total, owned, discovered, rate: Math.round((owned / total) * 100) };
+}
+
+function codexRankProgressMarkup(rank) {
+  const speciesByRank = monsterSpecies.filter((species) => species.rank === rank.name);
+  const total = speciesByRank.length || 1;
+  const owned = speciesByRank.filter((species) => state.ownedSpecies.has(species.no)).length;
+  const discovered = speciesByRank.filter((species) => (
+    !state.ownedSpecies.has(species.no) && state.discoveredSpecies.has(species.no)
+  )).length;
+  const ownedPercent = (owned / total) * 100;
+  const discoveredPercent = (discovered / total) * 100;
+  return `
+    <div class="codex-rank-row">
+      <span>${rank.name}</span>
+      <div class="codex-rank-track">
+        <i class="owned" style="width:${ownedPercent}%"></i>
+        <i class="seen" style="left:${ownedPercent}%;width:${discoveredPercent}%"></i>
+      </div>
+      <strong>${Math.round(ownedPercent)}%</strong>
+    </div>`;
+}
+
+function renderCodex() {
+  const progress = codexCompletion();
+  els.codexCompleteRate.textContent = `${progress.rate}%`;
+  els.codexRankBars.innerHTML = monsterRanks
+    .filter((rank) => monsterSpecies.some((species) => species.rank === rank.name))
+    .map(codexRankProgressMarkup)
+    .join("");
+  els.codexGrid.innerHTML = [...monsterSpecies]
+    .sort((a, b) => a.no - b.no)
+    .map((species) => {
+      const status = codexState(species);
+      const discovered = status !== "unknown";
+      const owned = status === "owned";
+      const fresh = state.newCodexSpecies.has(species.no);
+      return `
+        <button class="codex-card ${status}" data-codex-no="${species.no}" type="button">
+          <span class="codex-no">No.${String(species.no).padStart(3, "0")}</span>
+          <span class="codex-art ${discovered ? "" : "silhouette"}">
+            <span class="mini-monster" style="${speciesMiniStyle(species)}"></span>
+          </span>
+          <strong>${discovered ? species.name : "？？？"}</strong>
+          ${owned ? '<i class="codex-owned-mark">✓</i>' : ""}
+          ${fresh ? '<em class="codex-new-mark">NEW</em>' : ""}
+        </button>`;
+    })
+    .join("");
+}
+
+function openCodex() {
+  renderCodex();
+  showView("codexView");
+}
+
+function closeCodex() {
+  showView("partyView");
+  setHomeTab("monsters");
+}
+
+function dungeonSpeciesEntries(speciesNo) {
+  const entries = [];
+  Object.values(DUNGEON_CONFIG).forEach((dungeon) => {
+    dungeon.rushes?.forEach((rush, index) => {
+      const speciesList = rush.species ?? rush.speciesPool ?? [];
+      if (speciesList.includes(speciesNo)) {
+        entries.push(`${dungeon.name} / ラッシュ${index + 1}`);
+      }
+    });
+    if (dungeon.bosses?.some((boss) => boss.species === speciesNo)) {
+      entries.push(`${dungeon.name} / ガチバトル`);
+    }
+    if (dungeon.requestTables?.some((table) => (
+      table.monsters?.some((monster) => monster.species === speciesNo)
+    ))) {
+      entries.push(`${dungeon.name} / クリア後マッチ申請`);
+    }
+  });
+  if (!CATALOG_EXCLUDED_SPECIES.has(speciesNo)) {
+    entries.push("カタログマッチ");
+  }
+  return [...new Set(entries)];
+}
+
+function pairRecipeEntries(speciesNo) {
+  return PAIR_TRAIN_EVOLUTIONS
+    .filter((recipe) => recipe.resultSpecies === speciesNo)
+    .map((recipe) => {
+      const base = monsterSpecies.find((species) => species.no === recipe.baseSpecies);
+      const partner = monsterSpecies.find((species) => species.no === recipe.partnerSpecies);
+      const result = monsterSpecies.find((species) => species.no === recipe.resultSpecies);
+      return `${base?.name ?? "？"} × ${partner?.name ?? "？"} → ${result?.name ?? "？"}`;
+    });
+}
+
+function openCodexDetail(speciesNo) {
+  const species = monsterSpecies.find((candidate) => candidate.no === speciesNo);
+  if (!species) return;
+  state.newCodexSpecies.delete(speciesNo);
+  if (state.currentView === "codexView") renderCodex();
+  const status = codexState(species);
+  const discovered = status !== "unknown";
+  const owned = status === "owned";
+  const attr = speciesAttribute(species);
+  const rank = speciesRank(species);
+  const locations = discovered ? dungeonSpeciesEntries(species.no) : [];
+  const recipes = discovered ? pairRecipeEntries(species.no) : [];
+  els.codexDetailName.textContent = discovered ? species.name : "？？？";
+  els.codexDetailBody.innerHTML = `
+    <section class="codex-detail-hero ${discovered ? "" : "unknown"}">
+      <div class="codex-detail-art ${discovered ? "" : "silhouette"}">
+        <span class="mini-monster" style="${speciesMiniStyle(species)}"></span>
+      </div>
+      <div class="codex-detail-copy">
+        <span class="codex-status-badge ${owned ? "owned" : discovered ? "seen" : "unknown"}">
+          ${owned ? "取得済み" : discovered ? "未所持" : "未発見"}
+        </span>
+        <strong>${discovered ? species.name : "？？？"}</strong>
+        <span class="codex-detail-chips">
+          <i class="attribute-chip" style="--attr-bg:${attr.bg};--attr-color:${attr.color}">${discovered ? attr.name : "？"}</i>
+          <i class="inline-rank" style="${rankStyle(rank)}">${discovered ? rank.name : "？"}</i>
+        </span>
+      </div>
+    </section>
+    <section class="codex-stat-grid">
+      <span><small>HP</small><strong>${discovered ? species.hp : "？"}</strong></span>
+      <span><small>パワー</small><strong>${discovered ? species.power : "？"}</strong></span>
+      <span><small>スター</small><strong>${discovered ? species.star : "？"}</strong></span>
+    </section>
+    <section class="codex-info-block">
+      <h3>入手情報</h3>
+      ${discovered && locations.length
+        ? locations.map((entry) => `<p>${entry}</p>`).join("")
+        : `<p>${discovered ? "入手情報はまだありません。" : "まだ姿を確認していません。"}</p>`}
+    </section>
+    <section class="codex-info-block">
+      <h3>ペアトレ情報</h3>
+      ${discovered && recipes.length
+        ? recipes.map((entry) => `<p>${entry}</p>`).join("")
+        : `<p>${discovered ? "判明している組み合わせはありません。" : "発見するとヒントが表示されます。"}</p>`}
+    </section>`;
+  els.codexDetailDialog.showModal();
 }
 
 function pairTrainEvolution(baseMonster, partnerMonster) {
@@ -2720,7 +2918,10 @@ function finishPairTraining(evolve) {
   state.friends[baseIndex] = result;
   state.friends = state.friends.filter((monster) => monster.id !== partnerMonster.id);
   removeMonsterReferences(partnerMonster.id);
+  const firstOwnedResult = !state.ownedSpecies.has(result.speciesNo);
   state.discoveredSpecies.add(result.speciesNo);
+  state.ownedSpecies.add(result.speciesNo);
+  if (firstOwnedResult) state.newCodexSpecies.add(result.speciesNo);
   state.pendingPairResult = null;
   state.pairBaseId = result.id;
   state.pairPartnerId = null;
@@ -3744,6 +3945,7 @@ function startDungeon() {
   state.activeAllyIndex = 0;
   state.allyPartyGauge = 0;
   state.enemyPartyGauge = 0;
+  state.selectedLeftMoveIndex = 0;
   state.awaitingReplacement = false;
   if (state.tutorialStage === "dungeonSelected" && state.selectedDungeon === "warawara") {
     state.tutorialStage = "rushIntro";
@@ -3763,6 +3965,28 @@ function configuredEnemy(speciesNo, level, hpMultiplier = 1, boss = false, optio
 
 function currentDungeon() {
   return DUNGEON_CONFIG[state.selectedDungeon] ?? DUNGEON_CONFIG.warawara;
+}
+
+function battleThemeForDungeon(dungeonId = state.selectedDungeon) {
+  const themeMap = {
+    warawara: "forest",
+    beginner: "hall",
+    plain: "field",
+    sweetHome: "sweet",
+    alley: "alley",
+    geniusShape: "lab",
+    zombieTown: "night",
+    happyPersistence: "fairy",
+    endlessFlame: "flame"
+  };
+  const dungeon = DUNGEON_CONFIG[dungeonId];
+  if (dungeon?.category === "trial") return "trial";
+  if (dungeon?.category === "special") return "arena";
+  return themeMap[dungeonId] ?? "field";
+}
+
+function applyBattleTheme() {
+  if (els.battleView) els.battleView.dataset.battleTheme = battleThemeForDungeon();
 }
 
 function rushBattleCount() {
@@ -3787,6 +4011,35 @@ function battleDuration(milliseconds, mode = battleMode()) {
 
 function battleTimeout(callback, milliseconds, mode = battleMode()) {
   return window.setTimeout(callback, battleDuration(milliseconds, mode));
+}
+
+function currentLeftMove(monster) {
+  if (!monster) return null;
+  const moves = monster.leftMoves?.length
+    ? monster.leftMoves
+    : [{
+        name: monster.leftMove,
+        multiplier: monster.leftMoveMultiplier,
+        attribute: monster.leftMoveAttribute,
+        gauge: monster.leftMoveGauge,
+        effect: monster.leftMoveEffect
+      }];
+  const index = Math.min(Math.max(0, state.selectedLeftMoveIndex || 0), moves.length - 1);
+  if (index !== state.selectedLeftMoveIndex) state.selectedLeftMoveIndex = index;
+  return moves[index] ?? moves[0] ?? null;
+}
+
+function leftMoveByIndex(monster, index) {
+  return monster?.leftMoves?.[index] ?? null;
+}
+
+function moveTooltipText(move, fallbackEffect = "") {
+  if (!move) return fallbackEffect;
+  return [
+    `属性 ${move.attribute ?? "無"}`,
+    `消費G ${Math.max(0, Number(move.gauge) || 0)}`,
+    move.effect ?? fallbackEffect
+  ].join(" / ");
 }
 
 function updateBattleSpeedButton() {
@@ -3858,6 +4111,7 @@ function setBattleSpeedFromOption(mode, value) {
 function startBattleRound() {
   const boss = state.battleIndex === rushBattleCount();
   const dungeon = currentDungeon();
+  applyBattleTheme();
   window.clearInterval(state.rushTimer);
   if (!boss) {
     startRushBattle();
@@ -4235,6 +4489,8 @@ function renderBattleDots() {
 }
 
 function renderBattle() {
+  renderBattleUi();
+  return;
   els.testClearButton.textContent = "TEST: ガチバトル突破";
   els.battleKind.textContent = "GACHI BATTLE";
   const dungeon = currentDungeon();
@@ -4274,6 +4530,48 @@ function renderBattle() {
   renderBattleHp();
 }
 
+function renderBattleUi() {
+  els.testClearButton.textContent = "TEST: ガチバトル突破";
+  els.battleKind.textContent = "GACHI BATTLE";
+  const dungeon = currentDungeon();
+  els.battleTitle.textContent = dungeon.name;
+  renderBattleDots();
+  const ally = state.allies[state.activeAllyIndex];
+  const enemy = state.enemies[0];
+  if (!ally || !enemy) return;
+  const leftMove = currentLeftMove(ally.monster);
+  els.enemyName.textContent = enemy.name;
+  els.allyName.textContent = ally.name;
+  els.leftMoveCallout.textContent = leftMove?.name ?? ally.monster.leftMove;
+  els.rightMoveCallout.textContent = ally.monster.rightMove;
+  els.leftMoveGuide.textContent = leftMove?.name ?? ally.monster.leftMove;
+  els.rightMoveGuide.textContent = ally.monster.rightMove;
+  els.leftMoveButton.dataset.meta = `G${Math.max(0, Number(leftMove?.gauge) || 0)}`;
+  els.rightMoveButton.dataset.meta = `x${ally.monster.rightMoveMultiplier}`;
+  els.leftMoveButton.dataset.attribute = leftMove?.attribute ?? ally.monster.leftMoveAttribute ?? "無";
+  els.rightMoveButton.dataset.attribute = ally.monster.rightMoveAttribute ?? "無";
+  els.leftMoveTooltip.textContent = moveTooltipText(leftMove, ally.monster.leftMoveEffect);
+  els.rightMoveTooltip.textContent = moveTooltipText({
+    name: ally.monster.rightMove,
+    attribute: ally.monster.rightMoveAttribute,
+    gauge: 0,
+    effect: ally.monster.rightMoveEffect
+  });
+  els.leftMoveButton.setAttribute(
+    "aria-label",
+    `${leftMove?.name ?? ally.monster.leftMove} ${els.leftMoveTooltip.textContent}`
+  );
+  els.rightMoveButton.setAttribute(
+    "aria-label",
+    `${ally.monster.rightMove} ${els.rightMoveTooltip.textContent}`
+  );
+  applyBattleMonsterStyle(els.enemyMonster, enemy.monster);
+  applyBattleMonsterStyle(els.allyMonster, ally.monster);
+  updateBossMoveAvailability();
+  renderBench();
+  renderBattleHp();
+}
+
 function applyBattleMonsterStyle(element, monster) {
   element.style.setProperty("--battle-color", monster.attr.monster);
   element.style.setProperty("--battle-radius", monster.bodyRadius);
@@ -4296,7 +4594,8 @@ function renderBattleHp() {
 function updateBossMoveAvailability() {
   const ally = state.allies[state.activeAllyIndex];
   if (!ally || !els.leftMoveButton) return;
-  const gaugeCost = Math.max(0, Number(ally.monster.leftMoveGauge) || 0);
+  const leftMove = currentLeftMove(ally.monster);
+  const gaugeCost = Math.max(0, Number(leftMove?.gauge) || 0);
   const paralyzed = Boolean(ally.statuses.paralysis);
   const leftMoveReady = !state.battleLocked
     && !state.awaitingReplacement
@@ -4538,7 +4837,45 @@ function setHpBar(element, fighter) {
   element.className = `hp-fill ${percent <= 0 ? "down" : percent < 25 ? "critical" : percent < 50 ? "low" : ""}`;
 }
 
+function renderBenchUi() {
+  els.replacementPrompt.hidden = !state.awaitingReplacement;
+  const active = state.allies[state.activeAllyIndex];
+  const secondLeftMove = leftMoveByIndex(active?.monster, 1);
+  const selected = state.selectedLeftMoveIndex === 1 && secondLeftMove;
+  const left2Disabled = !secondLeftMove
+    || state.battleLocked
+    || state.awaitingReplacement
+    || active?.hp <= 0;
+  const left2Button = `
+    <button class="bench-button left2-toggle ${selected ? "selected" : ""}"
+      data-left2-toggle type="button" ${left2Disabled ? "disabled" : ""}>
+      <span class="left2-toggle-mark">左技2</span>
+      <span class="bench-copy">
+        <strong>${secondLeftMove?.name ?? "なし"}</strong>
+        <span>${secondLeftMove ? `G${Math.max(0, Number(secondLeftMove.gauge) || 0)} / ${secondLeftMove.attribute ?? "無"}` : "左技2なし"}</span>
+      </span>
+    </button>`;
+  const benchButtons = state.allies.map((fighter, index) => {
+    if (index === state.activeAllyIndex) return "";
+    const percent = Math.max(0, Math.round((fighter.hp / fighter.maxHp) * 100));
+    const selectableReplacement = state.awaitingReplacement && fighter.hp > 0;
+    const disabled = fighter.hp <= 0 || (state.battleLocked && !selectableReplacement);
+    return `
+      <button class="bench-button ${selectableReplacement ? "replacement-choice" : ""}"
+        data-bench-index="${index}" type="button" ${disabled ? "disabled" : ""}>
+        <div class="mini-monster" style="${monsterStyle(fighter.monster)}"></div>
+        <span class="bench-copy">
+          <strong>${fighter.name}</strong>
+          <span>HP ${fighter.hp} / ${fighter.maxHp} (${percent}%)</span>
+        </span>
+      </button>`;
+  }).join("");
+  els.bench.innerHTML = left2Button + benchButtons;
+}
+
 function renderBench() {
+  renderBenchUi();
+  return;
   els.replacementPrompt.hidden = !state.awaitingReplacement;
   els.bench.innerHTML = state.allies.map((fighter, index) => {
     const active = index === state.activeAllyIndex;
@@ -4703,14 +5040,17 @@ function useMove(direction) {
   }
 
   const right = direction === "right";
-  const moveName = right ? ally.monster.rightMove : ally.monster.leftMove;
+  const leftMove = currentLeftMove(ally.monster);
+  const moveName = right ? ally.monster.rightMove : (leftMove?.name ?? ally.monster.leftMove);
   const key = moveKey(moveName);
   const rollBonus = !right && key === "roll" ? ally.rollUses * 0.1 : 0;
   const multiplier = right
     ? ally.monster.rightMoveMultiplier
-    : ally.monster.leftMoveMultiplier + rollBonus;
-  const moveAttribute = right ? ally.monster.rightMoveAttribute : ally.monster.leftMoveAttribute;
-  const gaugeCost = right ? 0 : ally.monster.leftMoveGauge;
+    : (leftMove?.multiplier ?? ally.monster.leftMoveMultiplier) + rollBonus;
+  const moveAttribute = right
+    ? ally.monster.rightMoveAttribute
+    : (leftMove?.attribute ?? ally.monster.leftMoveAttribute);
+  const gaugeCost = right ? 0 : Math.max(0, Number(leftMove?.gauge) || 0);
   if (!right && ally.statuses.paralysis) {
     settleBossSwipe(() => {
       setBattleMessage("麻痺しているため左技を使用できない");
@@ -4892,6 +5232,7 @@ function switchAlly(index) {
   resetFighterStatChanges(outgoingFighter);
   if (state.awaitingReplacement) {
     state.activeAllyIndex = index;
+    state.selectedLeftMoveIndex = 0;
     state.awaitingReplacement = false;
     state.battleLocked = false;
     renderBattle();
@@ -4903,6 +5244,7 @@ function switchAlly(index) {
   if (state.battleLocked) return;
   state.battleLocked = true;
   state.activeAllyIndex = index;
+  state.selectedLeftMoveIndex = 0;
   renderBattle();
   setBattleMessage(`【味方】${fighter.name}に交代した`);
   triggerEntryTrait(fighter, state.enemies);
@@ -5395,6 +5737,7 @@ function renderCurrentRequest() {
     finishRequests();
     return;
   }
+  state.discoveredSpecies.add(monster.speciesNo);
   els.requestProgress.textContent = `${state.requestIndex + 1} / ${state.requests.length}`;
   els.name.textContent = monster.name;
   els.levelBadge.textContent = `Lv ${monster.level}`;
@@ -5625,6 +5968,10 @@ function replaceFriend(id) {
   state.friendSequence += 1;
   matchedMonster.acquiredOrder = state.friendSequence;
   state.friends[index] = matchedMonster;
+  const firstOwned = !state.ownedSpecies.has(matchedMonster.speciesNo);
+  state.discoveredSpecies.add(matchedMonster.speciesNo);
+  state.ownedSpecies.add(matchedMonster.speciesNo);
+  if (firstOwned) state.newCodexSpecies.add(matchedMonster.speciesNo);
   consumeCage(state.pendingRecruitCageType);
   state.partyPresets = state.partyPresets.map((preset) => preset.map((monsterId) => monsterId === id ? null : monsterId));
   state.profileMonsterIds = state.profileMonsterIds.map((monsterId) => monsterId === id ? null : monsterId);
@@ -5835,6 +6182,16 @@ function bindEvents() {
     scheduleAutosave();
   });
   els.openPartyEditorButton.addEventListener("click", openPartyManager);
+  els.openCodexButton.addEventListener("click", openCodex);
+  els.closeCodexButton.addEventListener("click", closeCodex);
+  els.codexGrid.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-codex-no]");
+    if (button) openCodexDetail(Number(button.dataset.codexNo));
+  });
+  els.closeCodexDetail.addEventListener("click", () => els.codexDetailDialog.close());
+  els.codexDetailDialog.addEventListener("click", (event) => {
+    if (clickedDialogBackdrop(event, els.codexDetailDialog)) els.codexDetailDialog.close();
+  });
   els.collectionSort.addEventListener("change", () => {
     state.collectionSort = els.collectionSort.value;
     renderCollection();
@@ -6020,6 +6377,15 @@ function bindEvents() {
     });
   });
   els.bench.addEventListener("click", (event) => {
+    const left2Toggle = event.target.closest("[data-left2-toggle]");
+    if (left2Toggle) {
+      const active = state.allies[state.activeAllyIndex];
+      if (!left2Toggle.disabled && leftMoveByIndex(active?.monster, 1)) {
+        state.selectedLeftMoveIndex = state.selectedLeftMoveIndex === 1 ? 0 : 1;
+        renderBattle();
+      }
+      return;
+    }
     const button = event.target.closest("[data-bench-index]");
     if (button) openBenchActions(Number(button.dataset.benchIndex));
   });
