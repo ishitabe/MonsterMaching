@@ -2511,28 +2511,54 @@ function closeCodex() {
   setHomeTab("monsters");
 }
 
-function dungeonSpeciesEntries(speciesNo) {
+function codexAcquisitionEntries(speciesNo) {
   const entries = [];
   Object.values(DUNGEON_CONFIG).forEach((dungeon) => {
-    dungeon.rushes?.forEach((rush, index) => {
-      const speciesList = rush.species ?? rush.speciesPool ?? [];
-      if (speciesList.includes(speciesNo)) {
-        entries.push(`${dungeon.name} / ラッシュ${index + 1}`);
-      }
-    });
-    if (dungeon.bosses?.some((boss) => boss.species === speciesNo)) {
-      entries.push(`${dungeon.name} / ガチバトル`);
-    }
     if (dungeon.requestTables?.some((table) => (
       table.monsters?.some((monster) => monster.species === speciesNo)
     ))) {
-      entries.push(`${dungeon.name} / クリア後マッチ申請`);
+      entries.push(`${dungeon.name} / ダンジョン後マッチ`);
     }
   });
   if (!CATALOG_EXCLUDED_SPECIES.has(speciesNo)) {
-    entries.push("カタログマッチ");
+    entries.push("カタログ");
   }
   return [...new Set(entries)];
+}
+
+function codexMoveTag(move) {
+  const key = moveKey(move?.name);
+  const statusKeys = new Set([
+    "burn", "soak", "gnaw", "poisonFang", "electricShock",
+    "lick", "poisonBreath", "slimePress"
+  ]);
+  const supportKeys = new Set(["shine", "grow", "glitterMachine", "charge", "healingWater", "cling"]);
+  if (statusKeys.has(key)) return "状態異常";
+  if (supportKeys.has(key)) return "補助";
+  return (Number(move?.multiplier) || 0) > 0 ? "攻撃" : "特殊";
+}
+
+function codexMoveRows(movesToShow) {
+  return movesToShow.map(({ label, move }) => `
+    <article class="codex-move-row">
+      <span>
+        <small>${label}</small>
+        <strong>${move?.name ?? "なし"}</strong>
+      </span>
+      <i>${move ? codexMoveTag(move) : "なし"}</i>
+      <p>${move?.effect ?? "この技はありません。"}</p>
+    </article>
+  `).join("");
+}
+
+function codexMovesForSpecies(species) {
+  const rightMove = species.rightMoves?.[0] ?? normalAttack(species.attribute);
+  const leftMoves = species.leftMoves ?? [species.leftMove].filter(Boolean);
+  return [
+    { label: "右技", move: rightMove },
+    { label: "左技1", move: leftMoves[0] },
+    { label: "左技2", move: leftMoves[1] ?? null }
+  ];
 }
 
 function pairRecipeEntries(speciesNo) {
@@ -2556,8 +2582,9 @@ function openCodexDetail(speciesNo) {
   const owned = status === "owned";
   const attr = speciesAttribute(species);
   const rank = speciesRank(species);
-  const locations = discovered ? dungeonSpeciesEntries(species.no) : [];
+  const locations = discovered ? codexAcquisitionEntries(species.no) : [];
   const recipes = discovered ? pairRecipeEntries(species.no) : [];
+  const passive = species.passives?.[0] ?? species.passive;
   els.codexDetailName.textContent = discovered ? species.name : "？？？";
   els.codexDetailBody.innerHTML = `
     <section class="codex-detail-hero ${discovered ? "" : "unknown"}">
@@ -2580,11 +2607,23 @@ function openCodexDetail(speciesNo) {
       <span><small>パワー</small><strong>${discovered ? species.power : "？"}</strong></span>
       <span><small>スター</small><strong>${discovered ? species.star : "？"}</strong></span>
     </section>
+    <section class="codex-info-block codex-move-block">
+      <h3>技情報</h3>
+      ${discovered
+        ? codexMoveRows(codexMovesForSpecies(species))
+        : `<p>発見すると技情報が表示されます。</p>`}
+    </section>
+    <section class="codex-info-block codex-trait-block">
+      <h3>特性</h3>
+      ${discovered
+        ? `<article class="codex-trait-row"><strong>${passive?.name ?? "なし"}</strong><p>${passive?.effect ?? "パッシブなし"}</p></article>`
+        : `<p>発見すると特性が表示されます。</p>`}
+    </section>
     <section class="codex-info-block">
       <h3>入手情報</h3>
       ${discovered && locations.length
         ? locations.map((entry) => `<p>${entry}</p>`).join("")
-        : `<p>${discovered ? "入手情報はまだありません。" : "まだ姿を確認していません。"}</p>`}
+        : `<p>${discovered ? "仲間にできる場所はまだ不明です。" : "まだ姿を確認していません。"}</p>`}
     </section>
     <section class="codex-info-block">
       <h3>ペアトレ情報</h3>
