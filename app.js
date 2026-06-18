@@ -5351,11 +5351,16 @@ function adjustedDungeonRequestTables(dungeon, partyStarAverage) {
   const referenceStar = Math.max(1, dungeon.requestReferenceStar ?? 1);
   const stage = Math.max(0, partyStarAverage / referenceStar);
   const adjusted = tables.map((table) => ({ ...table, adjustedRate: 0 }));
+  const minimumFallbackRate = 10;
   let remainingRate = 100;
 
   for (let index = adjusted.length - 1; index >= 1; index -= 1) {
-    const tableRate = Math.min(
+    const weakerReserve = Math.min(
       remainingRate,
+      index * minimumFallbackRate
+    );
+    const tableRate = Math.min(
+      Math.max(0, remainingRate - weakerReserve),
       Math.max(0, stage * adjusted[index].baseRate)
     );
     adjusted[index].adjustedRate = tableRate;
